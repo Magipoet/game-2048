@@ -132,6 +132,12 @@ class _GameScreenState extends State<GameScreen> {
     });
   }
 
+  void _closeGameOverDialog() {
+    setState(() {
+      _showGameOverDialog = false;
+    });
+  }
+
   void _changeMode(GameMode mode) {
     if (_gameLogic.currentMode != mode) {
       setState(() {
@@ -201,7 +207,7 @@ class _GameScreenState extends State<GameScreen> {
   void _showGameOverDialogFunc() {
     showDialog(
       context: context,
-      barrierDismissible: false,
+      barrierDismissible: true,
       builder: (context) => AlertDialog(
         title: const Text('游戏结束'),
         content: Column(
@@ -214,26 +220,61 @@ class _GameScreenState extends State<GameScreen> {
               style: TextStyle(fontSize: 16, color: GameColors.textColor),
             ),
             const SizedBox(height: 16),
-            Text(
-              '最终得分',
-              style: TextStyle(fontSize: 14, color: GameColors.textColor.withOpacity(0.7)),
-            ),
-            Text(
-              '${_gameLogic.score}',
-              style: TextStyle(
-                fontSize: 32,
-                fontWeight: FontWeight.bold,
-                color: GameColors.textColor,
-              ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                Column(
+                  children: [
+                    Text(
+                      '最终得分',
+                      style: TextStyle(fontSize: 14, color: GameColors.textColor.withOpacity(0.7)),
+                    ),
+                    Text(
+                      '${_gameLogic.score}',
+                      style: TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
+                        color: GameColors.textColor,
+                      ),
+                    ),
+                  ],
+                ),
+                Column(
+                  children: [
+                    Text(
+                      '最大数字',
+                      style: TextStyle(fontSize: 14, color: GameColors.textColor.withOpacity(0.7)),
+                    ),
+                    Text(
+                      '${_gameLogic.maxTile}',
+                      style: TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
+                        color: GameColors.textColor,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ),
             if (_gameLogic.currentMode == GameMode.unlimited)
-              Text(
-                '用时: ${_gameLogic.getFormattedTime()}',
-                style: TextStyle(fontSize: 16, color: GameColors.textColor),
+              Padding(
+                padding: const EdgeInsets.only(top: 16),
+                child: Text(
+                  '用时: ${_gameLogic.getFormattedTime()}',
+                  style: TextStyle(fontSize: 16, color: GameColors.textColor),
+                ),
               ),
           ],
         ),
         actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              _closeGameOverDialog();
+            },
+            child: const Text('关闭'),
+          ),
           ElevatedButton(
             onPressed: () {
               Navigator.of(context).pop();
@@ -355,6 +396,8 @@ class _GameScreenState extends State<GameScreen> {
                           unlimitedHighestScore: _storageService.getHighestScore(GameMode.unlimited),
                           bestTime: _storageService.getBestTime(),
                         ),
+                        const SizedBox(height: 24),
+                        _buildNewGameButton(),
                       ],
                     ),
                   ),
@@ -366,6 +409,30 @@ class _GameScreenState extends State<GameScreen> {
           ],
         );
       },
+    );
+  }
+
+  Widget _buildNewGameButton() {
+    return SizedBox(
+      width: double.infinity,
+      child: ElevatedButton(
+        onPressed: _resetGame,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: GameColors.buttonBackground,
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8),
+          ),
+        ),
+        child: Text(
+          '新一局',
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: GameColors.buttonTextColor,
+          ),
+        ),
+      ),
     );
   }
 

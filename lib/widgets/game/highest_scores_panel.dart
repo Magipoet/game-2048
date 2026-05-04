@@ -21,7 +21,7 @@ class HighestScoresPanel extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          '历史最高分',
+          '历史最高总分',
           style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.bold,

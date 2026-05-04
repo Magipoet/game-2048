@@ -297,4 +297,17 @@ class Game2048Logic {
     }
     return _elapsedSeconds;
   }
+
+  int get maxTile {
+    int maxValue = 0;
+    for (int i = 0; i < GameBoard.size; i++) {
+      for (int j = 0; j < GameBoard.size; j++) {
+        int value = _board.getValue(i, j);
+        if (value > maxValue) {
+          maxValue = value;
+        }
+      }
+    }
+    return maxValue;
+  }
 }
