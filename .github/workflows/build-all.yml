@@ -259,12 +259,10 @@ jobs:
         KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
         KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
       run: |
-        cat > android/key.properties << EOF
-storePassword=$STORE_PASSWORD
-keyPassword=$KEY_PASSWORD
-keyAlias=$KEY_ALIAS
-storeFile=game-2048-keystore.jks
-EOF
+        echo "storePassword=$STORE_PASSWORD" > android/key.properties
+        echo "keyPassword=$KEY_PASSWORD" >> android/key.properties
+        echo "keyAlias=$KEY_ALIAS" >> android/key.properties
+        echo "storeFile=game-2048-keystore.jks" >> android/key.properties
         
         echo "✅ key.properties created"
         cat android/key.properties | sed 's/=.*/=***REDACTED***/'
