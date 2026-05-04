@@ -1,0 +1,391 @@
+name: Build All Platforms
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+env:
+  FLUTTER_VERSION: '3.41.9'
+  JAVA_VERSION: '17'
+  APP_NAME: 'game-2048'
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+permissions:
+  contents: write
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  pre-check:
+    name: Pre-check Configuration
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v6
+
+    - name: Validate version format
+      id: version
+      run: |
+        if [[ "${{ github.ref }}" == refs/tags/* ]]; then
+          TAG="${{ github.ref_name }}"
+          if [[ "$TAG" == v* ]]; then
+            VERSION="${TAG#v}"
+            echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+            echo "TAG=$TAG" >> $GITHUB_OUTPUT
+            echo "Valid tag format: $TAG -> Version: $VERSION"
+          else
+            echo "Invalid tag format. Tag should start with 'v', e.g., v1.0.3"
+            exit 1
+          fi
+        else
+          echo "Not a tag push, using default version"
+          echo "VERSION=dev" >> $GITHUB_OUTPUT
+          echo "TAG=dev" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Check pubspec.yaml version
+      run: |
+        echo "Checking pubspec.yaml version..."
+        if ! grep -q "version: " pubspec.yaml; then
+          echo "❌ No version found in pubspec.yaml"
+          exit 1
+        fi
+        VERSION_LINE=$(grep "version: " pubspec.yaml)
+        echo "✅ pubspec.yaml version: $VERSION_LINE"
+
+    - name: Check Android signing config (for tagged builds)
+      if: startsWith(github.ref, 'refs/tags/')
+      env:
+        KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+        KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+        KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+      run: |
+        echo "Checking Android signing configuration..."
+        ERROR=0
+        
+        if [ -z "$KEYSTORE_BASE64" ]; then
+          echo "❌ ANDROID_KEYSTORE_BASE64 is not configured"
+          ERROR=1
+        else
+          echo "✅ ANDROID_KEYSTORE_BASE64 is configured"
+        fi
+        
+        if [ -z "$KEYSTORE_PASSWORD" ]; then
+          echo "❌ ANDROID_KEYSTORE_PASSWORD is not configured"
+          ERROR=1
+        else
+          echo "✅ ANDROID_KEYSTORE_PASSWORD is configured"
+        fi
+        
+        if [ -z "$KEY_PASSWORD" ]; then
+          echo "❌ ANDROID_KEY_PASSWORD is not configured"
+          ERROR=1
+        else
+          echo "✅ ANDROID_KEY_PASSWORD is configured"
+        fi
+        
+        if [ -z "$KEY_ALIAS" ]; then
+          echo "❌ ANDROID_KEY_ALIAS is not configured"
+          ERROR=1
+        else
+          echo "✅ ANDROID_KEY_ALIAS is configured"
+        fi
+        
+        if [ $ERROR -eq 1 ]; then
+          echo ""
+          echo "Please configure the required GitHub Secrets:"
+          echo "  - ANDROID_KEYSTORE_BASE64"
+          echo "  - ANDROID_KEYSTORE_PASSWORD"
+          echo "  - ANDROID_KEY_PASSWORD"
+          echo "  - ANDROID_KEY_ALIAS"
+          exit 1
+        fi
+        
+        echo "✅ All Android signing secrets are configured"
+
+    - name: Check build.gradle template exists
+      run: |
+        if [ -f "config/android/app-build.gradle.template" ]; then
+          echo "✅ build.gradle template found"
+        else
+          echo "❌ build.gradle template not found at: config/android/app-build.gradle.template"
+          exit 1
+        fi
+
+    outputs:
+      version: ${{ steps.version.outputs.VERSION }}
+      tag: ${{ steps.version.outputs.TAG }}
+
+  build-windows:
+    name: Build Windows Executable
+    needs: pre-check
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v6
+
+    - name: Setup Flutter
+      uses: subosito/flutter-action@v2
+      with:
+        flutter-version: ${{ env.FLUTTER_VERSION }}
+        channel: 'stable'
+        cache: true
+
+    - name: Install dependencies
+      run: flutter pub get
+      timeout-minutes: 10
+
+    - name: Enable Windows desktop
+      run: flutter config --enable-windows-desktop
+
+    - name: Generate Windows platform files
+      run: flutter create . --platforms windows
+
+    - name: Build Windows executable
+      run: flutter build windows --release
+      timeout-minutes: 15
+
+    - name: List build output
+      run: |
+        Get-ChildItem -Recurse build/windows/x64/runner/Release/
+
+    - name: Create distribution package
+      run: |
+        $buildDir = "build/windows/x64/runner/Release"
+        $distDir = "${{ env.APP_NAME }}-windows"
+        
+        New-Item -ItemType Directory -Path $distDir -Force
+        Copy-Item -Path "$buildDir/*" -Destination $distDir -Recurse
+        
+        Compress-Archive -Path $distDir -DestinationPath "${{ env.APP_NAME }}-windows.zip"
+
+    - name: Upload Windows ZIP as Artifact
+      uses: actions/upload-artifact@v7
+      with:
+        name: ${{ env.APP_NAME }}-Windows-ZIP
+        path: ${{ env.APP_NAME }}-windows.zip
+        retention-days: 90
+
+    - name: Upload Windows Directory as Artifact
+      uses: actions/upload-artifact@v7
+      with:
+        name: ${{ env.APP_NAME }}-Windows-Directory
+        path: ${{ env.APP_NAME }}-windows/
+        retention-days: 90
+
+  build-android:
+    name: Build Android Release APK
+    needs: pre-check
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v6
+
+    - name: Setup Java JDK
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'temurin'
+        java-version: ${{ env.JAVA_VERSION }}
+
+    - name: Setup Android SDK
+      uses: android-actions/setup-android@v3
+
+    - name: Setup Flutter
+      uses: subosito/flutter-action@v2
+      with:
+        flutter-version: ${{ env.FLUTTER_VERSION }}
+        channel: 'stable'
+        cache: true
+
+    - name: Install dependencies
+      run: flutter pub get
+      timeout-minutes: 10
+
+    - name: Generate Android platform files
+      run: flutter create . --platforms android
+      timeout-minutes: 5
+
+    - name: List generated Android files
+      run: |
+        echo "Generated Android files:"
+        ls -la android/
+        ls -la android/app/
+
+    - name: Copy build.gradle template
+      run: |
+        echo "📋 Copying build.gradle template..."
+        TEMPLATE="config/android/app-build.gradle.template"
+        TARGET="android/app/build.gradle"
+        
+        if [ -f "$TEMPLATE" ]; then
+          cp "$TEMPLATE" "$TARGET"
+          echo "✅ build.gradle copied from template"
+          echo ""
+          echo "📄 Final build.gradle content (first 100 lines):"
+          head -100 "$TARGET"
+        else
+          echo "❌ Template file not found: $TEMPLATE"
+          exit 1
+        fi
+
+    - name: Decode Keystore from Secrets
+      if: startsWith(github.ref, 'refs/tags/')
+      env:
+        KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+      run: |
+        echo "🔐 Decoding keystore..."
+        echo "$KEYSTORE_BASE64" | base64 -d > android/app/game-2048-keystore.jks
+        
+        if [ -f android/app/game-2048-keystore.jks ]; then
+          echo "✅ Keystore file created successfully"
+          ls -la android/app/game-2048-keystore.jks
+        else
+          echo "❌ Failed to create keystore file"
+          exit 1
+        fi
+
+    - name: Create key.properties
+      if: startsWith(github.ref, 'refs/tags/')
+      env:
+        STORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+        KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+      run: |
+        cat > android/key.properties << EOF
+storePassword=$STORE_PASSWORD
+keyPassword=$KEY_PASSWORD
+keyAlias=$KEY_ALIAS
+storeFile=game-2048-keystore.jks
+EOF
+        
+        echo "✅ key.properties created"
+        cat android/key.properties | sed 's/=.*/=***REDACTED***/'
+
+    - name: Build Release APK
+      run: |
+        echo "🔨 Building Release APK..."
+        flutter build apk --release
+      timeout-minutes: 20
+
+    - name: List build outputs
+      run: |
+        echo "📦 Build outputs:"
+        ls -la build/app/outputs/flutter-apk/
+        
+        if [ -f build/app/outputs/flutter-apk/app-release.apk ]; then
+          echo "✅ Release APK found"
+        else
+          echo "❌ Release APK not found"
+          find build -name "*.apk"
+          exit 1
+        fi
+
+    - name: Verify APK signature
+      if: startsWith(github.ref, 'refs/tags/')
+      run: |
+        echo "🔍 Verifying APK signature..."
+        APK_PATH="build/app/outputs/flutter-apk/app-release.apk"
+        
+        if [ -f "$APK_PATH" ]; then
+          echo "APK file: $APK_PATH"
+          echo "APK size: $(ls -la $APK_PATH | awk '{print $5}') bytes"
+          echo ""
+          
+          BUILD_TOOLS_DIR="$ANDROID_HOME/build-tools"
+          if [ -d "$BUILD_TOOLS_DIR" ]; then
+            LATEST_BUILD_TOOLS=$(ls -1 $BUILD_TOOLS_DIR | sort -V | tail -n 1)
+            echo "Found build-tools: $LATEST_BUILD_TOOLS"
+            
+            APK_SIGNER="$BUILD_TOOLS_DIR/$LATEST_BUILD_TOOLS/apksigner"
+            if [ -f "$APK_SIGNER" ]; then
+              echo "Using apksigner: $APK_SIGNER"
+              echo ""
+              if "$APK_SIGNER" verify --print-certs "$APK_PATH"; then
+                echo "✅ APK signature verified successfully"
+              else
+                echo "⚠️ APK signature verification may have issues"
+              fi
+            else
+              echo "⚠️ apksigner not found at $APK_SIGNER"
+            fi
+          else
+            echo "⚠️ build-tools directory not found at $BUILD_TOOLS_DIR"
+          fi
+          
+          echo ""
+          echo "🔍 Checking APK with jarsigner (alternative method)..."
+          if command -v jarsigner &> /dev/null; then
+            if jarsigner -verify "$APK_PATH" 2>/dev/null; then
+              echo "✅ jarsigner verification: APK is signed"
+            else
+              echo "⚠️ jarsigner verification failed or APK is not signed"
+            fi
+          else
+            echo "⚠️ jarsigner not available"
+          fi
+        else
+          echo "❌ APK file not found for signature verification"
+          exit 1
+        fi
+
+    - name: Rename APK with version
+      env:
+        VERSION: ${{ needs.pre-check.outputs.tag }}
+      run: |
+        APK_VERSION=${VERSION:-dev}
+        
+        cp build/app/outputs/flutter-apk/app-release.apk \
+          ${{ env.APP_NAME }}-android-$APK_VERSION-release.apk
+        
+        echo "✅ APK renamed to: ${{ env.APP_NAME }}-android-$APK_VERSION-release.apk"
+        ls -la *.apk
+
+    - name: Upload APK as Artifact
+      uses: actions/upload-artifact@v7
+      with:
+        name: ${{ env.APP_NAME }}-Android-Release-APK
+        path: ${{ env.APP_NAME }}-android-*.apk
+        retention-days: 90
+
+  create-release:
+    name: Create GitHub Release
+    needs: [pre-check, build-windows, build-android]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    if: startsWith(github.ref, 'refs/tags/')
+    steps:
+    - name: Download Windows Artifact
+      uses: actions/download-artifact@v7
+      with:
+        name: ${{ env.APP_NAME }}-Windows-ZIP
+        path: ./release
+
+    - name: Download Android Artifact
+      uses: actions/download-artifact@v7
+      with:
+        name: ${{ env.APP_NAME }}-Android-Release-APK
+        path: ./release
+
+    - name: List release assets
+      run: |
+        echo "📦 Release assets:"
+        ls -la ./release/
+        echo ""
+        echo "Files to be uploaded:"
+        find ./release -type f
+
+    - name: Create GitHub Release
+      uses: softprops/action-gh-release@v2
+      with:
+        files: |
+          ./release/*
+        generate_release_notes: true
+        token: ${{ secrets.GITHUB_TOKEN }}
