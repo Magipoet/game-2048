@@ -271,10 +271,10 @@ class _GameScreenState extends State<GameScreen> {
           child: KeyboardInputHandler(
             focusNode: _focusNode,
             onMove: _handleMove,
-            enabled: !_inputCoordinator.isProcessing,
+            enabled: true,
             child: GestureInputHandler(
               onMove: _handleMove,
-              enabled: !_inputCoordinator.isProcessing,
+              enabled: true,
               child: _buildGameLayout(),
             ),
           ),
