@@ -45,6 +45,7 @@ class _GameScreenState extends State<GameScreen> {
 
   Future<void> _initServices() async {
     _storageService = await StorageServiceProvider.getInstance();
+    _gameLogic.addListener(_onGameLogicChanged);
     setState(() {
       _isInitialized = true;
       _gameLogic.initGame();
@@ -55,8 +56,14 @@ class _GameScreenState extends State<GameScreen> {
   @override
   void dispose() {
     _focusNode.dispose();
+    _gameLogic.removeListener(_onGameLogicChanged);
     _gameLogic.stopTimer();
     super.dispose();
+  }
+
+  void _onGameLogicChanged() {
+    setState(() {});
+    _checkGameState();
   }
 
   Future<void> _handleMove(Direction direction) async {

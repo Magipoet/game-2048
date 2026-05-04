@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'dart:math';
 
+import 'package:flutter/foundation.dart';
+
 import '../models/game_board.dart';
 import '../models/game_mode.dart';
 import '../models/move_result.dart';
@@ -12,7 +14,7 @@ enum Direction {
   down,
 }
 
-class Game2048Logic {
+class Game2048Logic extends ChangeNotifier {
   GameBoard _board;
   int _score;
   bool _gameOver;
@@ -55,10 +57,12 @@ class Game2048Logic {
     _elapsedSeconds = 0;
     _gameTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
       _elapsedSeconds++;
+      notifyListeners();
       
       if (_currentMode == GameMode.timed && _elapsedSeconds >= _timedModeDuration) {
         _gameOver = true;
         _gameTimer?.cancel();
+        notifyListeners();
       }
     });
   }
@@ -76,10 +80,12 @@ class Game2048Logic {
     
     _gameTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
       _elapsedSeconds++;
+      notifyListeners();
       
       if (_currentMode == GameMode.timed && _elapsedSeconds >= _timedModeDuration) {
         _gameOver = true;
         _gameTimer?.cancel();
+        notifyListeners();
       }
     });
   }
