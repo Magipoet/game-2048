@@ -336,6 +336,7 @@ class _GameScreenState extends State<GameScreen> {
       builder: (context, constraints) {
         double minDimension = min(constraints.maxWidth, constraints.maxHeight);
         double boardSize = minDimension * 0.8;
+        bool isPortrait = constraints.maxHeight > constraints.maxWidth;
 
         return Stack(
           children: [
@@ -352,70 +353,129 @@ class _GameScreenState extends State<GameScreen> {
 
             Padding(
               padding: const EdgeInsets.all(16),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    flex: 3,
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.only(left: 8, bottom: 16),
-                          child: Text(
-                            '2048消消乐',
-                            style: TextStyle(
-                              fontSize: 36,
-                              fontWeight: FontWeight.bold,
-                              color: GameColors.textColor,
-                            ),
-                          ),
-                        ),
-                        Align(
-                          alignment: Alignment.bottomRight,
-                          child: BoardWidget(
-                            board: _gameLogic.board,
-                            size: boardSize,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(width: 24),
-                  Expanded(
-                    flex: 2,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const SizedBox(height: 50),
-                        ModeSelector(
-                          currentMode: _gameLogic.currentMode,
-                          onModeChanged: _changeMode,
-                          timeDisplay: _gameLogic.getFormattedTime(),
-                          isTimedMode: _gameLogic.currentMode == GameMode.timed,
-                        ),
-                        const SizedBox(height: 24),
-                        CurrentScorePanel(score: _gameLogic.score),
-                        const SizedBox(height: 16),
-                        HighestScoresPanel(
-                          timedHighestScore: _storageService.getHighestScore(GameMode.timed),
-                          unlimitedHighestScore: _storageService.getHighestScore(GameMode.unlimited),
-                          bestTime: _storageService.getBestTime(),
-                        ),
-                        const SizedBox(height: 24),
-                        _buildNewGameButton(),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
+              child: isPortrait
+                  ? _buildPortraitLayout(boardSize)
+                  : _buildLandscapeLayout(boardSize),
             ),
 
             if (_showHelpDialog) _buildHelpDialog(),
           ],
         );
       },
+    );
+  }
+
+  Widget _buildPortraitLayout(double boardSize) {
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(top: 8, bottom: 16),
+          child: Text(
+            '2048消消乐',
+            style: TextStyle(
+              fontSize: 28,
+              fontWeight: FontWeight.bold,
+              color: GameColors.textColor,
+            ),
+          ),
+        ),
+        Center(
+          child: BoardWidget(
+            board: _gameLogic.board,
+            size: boardSize,
+          ),
+        ),
+        const SizedBox(height: 24),
+        Expanded(
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                ModeSelector(
+                  currentMode: _gameLogic.currentMode,
+                  onModeChanged: _changeMode,
+                  timeDisplay: _gameLogic.getFormattedTime(),
+                  isTimedMode: _gameLogic.currentMode == GameMode.timed,
+                  isVerticalButtons: true,
+                ),
+                const SizedBox(height: 16),
+                CurrentScorePanel(score: _gameLogic.score),
+                const SizedBox(height: 16),
+                HighestScoresPanel(
+                  timedHighestScore: _storageService.getHighestScore(GameMode.timed),
+                  unlimitedHighestScore: _storageService.getHighestScore(GameMode.unlimited),
+                  bestTime: _storageService.getBestTime(),
+                ),
+                const SizedBox(height: 16),
+                _buildNewGameButton(),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildLandscapeLayout(double boardSize) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(
+          flex: 3,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(left: 8, bottom: 16),
+                child: Text(
+                  '2048消消乐',
+                  style: TextStyle(
+                    fontSize: 36,
+                    fontWeight: FontWeight.bold,
+                    color: GameColors.textColor,
+                  ),
+                ),
+              ),
+              Center(
+                child: BoardWidget(
+                  board: _gameLogic.board,
+                  size: boardSize,
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(width: 24),
+        Expanded(
+          flex: 2,
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SizedBox(height: 50),
+                ModeSelector(
+                  currentMode: _gameLogic.currentMode,
+                  onModeChanged: _changeMode,
+                  timeDisplay: _gameLogic.getFormattedTime(),
+                  isTimedMode: _gameLogic.currentMode == GameMode.timed,
+                  isVerticalButtons: false,
+                ),
+                const SizedBox(height: 24),
+                CurrentScorePanel(score: _gameLogic.score),
+                const SizedBox(height: 16),
+                HighestScoresPanel(
+                  timedHighestScore: _storageService.getHighestScore(GameMode.timed),
+                  unlimitedHighestScore: _storageService.getHighestScore(GameMode.unlimited),
+                  bestTime: _storageService.getBestTime(),
+                ),
+                const SizedBox(height: 24),
+                _buildNewGameButton(),
+              ],
+            ),
+          ),
+        ),
+      ],
     );
   }
 
