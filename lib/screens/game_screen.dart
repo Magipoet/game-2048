@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -8,9 +10,9 @@ import '../services/storage_service.dart';
 import '../utils/game_colors.dart';
 import '../utils/input_coordinator.dart';
 import '../widgets/game/board_widget.dart';
-import '../widgets/game/current_score_panel.dart';
 import '../widgets/game/highest_scores_panel.dart';
 import '../widgets/game/mode_selector.dart';
+import '../widgets/game/score_panel.dart';
 import '../widgets/input/focus_manager_widget.dart';
 import '../widgets/input/gesture_input_handler.dart';
 import '../widgets/input/keyboard_input_handler.dart';

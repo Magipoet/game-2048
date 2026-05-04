@@ -109,15 +109,6 @@ jobs:
         
         echo "✅ All Android signing secrets are configured"
 
-    - name: Check build.gradle template exists
-      run: |
-        if [ -f "config/android/app-build.gradle.template" ]; then
-          echo "✅ build.gradle template found"
-        else
-          echo "❌ build.gradle template not found at: config/android/app-build.gradle.template"
-          exit 1
-        fi
-
     outputs:
       version: ${{ steps.version.outputs.VERSION }}
       tag: ${{ steps.version.outputs.TAG }}
@@ -218,23 +209,6 @@ jobs:
         echo "Generated Android files:"
         ls -la android/
         ls -la android/app/
-
-    - name: Copy build.gradle template
-      run: |
-        echo "📋 Copying build.gradle template..."
-        TEMPLATE="config/android/app-build.gradle.template"
-        TARGET="android/app/build.gradle"
-        
-        if [ -f "$TEMPLATE" ]; then
-          cp "$TEMPLATE" "$TARGET"
-          echo "✅ build.gradle copied from template"
-          echo ""
-          echo "📄 Final build.gradle content (first 100 lines):"
-          head -100 "$TARGET"
-        else
-          echo "❌ Template file not found: $TEMPLATE"
-          exit 1
-        fi
 
     - name: Decode Keystore from Secrets
       if: startsWith(github.ref, 'refs/tags/')
