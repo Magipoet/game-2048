@@ -80,18 +80,23 @@ class _GameScreenState extends State<GameScreen> {
   }
 
   void _checkGameState() {
-    if (_gameLogic.isGameWon && !_showWinDialog) {
+    if (_gameLogic.shouldShowWinDialog && !_showWinDialog) {
       _showWinDialog = true;
       _gameLogic.pauseTimer();
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _showWinGameDialog();
       });
-    } else if (_gameLogic.isGameOver && !_showGameOverDialog) {
+    }
+
+    if (_gameLogic.isGameOver && !_showGameOverDialog) {
       _showGameOverDialog = true;
       _gameLogic.stopTimer();
-      _updateHighScores();
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        _showGameOverDialogFunc();
+      _updateHighScores().then((_) {
+        if (mounted) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            _showGameOverDialogFunc();
+          });
+        }
       });
     }
   }

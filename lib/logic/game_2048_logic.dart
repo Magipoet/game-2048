@@ -294,6 +294,7 @@ class Game2048Logic extends ChangeNotifier {
   int get score => _score;
   bool get isGameOver => _gameOver;
   bool get isGameWon => _gameWon;
+  bool get shouldShowWinDialog => _gameWon && !_continueAfterWin;
   GameBoard get board => _board;
   GameMode get currentMode => _currentMode;
   int get elapsedSeconds => _elapsedSeconds;
