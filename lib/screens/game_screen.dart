@@ -340,7 +340,7 @@ class _GameScreenState extends State<GameScreen> {
     return LayoutBuilder(
       builder: (context, constraints) {
         double minDimension = min(constraints.maxWidth, constraints.maxHeight);
-        double boardSize = minDimension * 0.8;
+        double boardSize = minDimension * 5 / 6;
         bool isPortrait = constraints.maxHeight > constraints.maxWidth;
 
         return Stack(
@@ -374,24 +374,28 @@ class _GameScreenState extends State<GameScreen> {
     return Column(
       children: [
         Padding(
-          padding: const EdgeInsets.only(top: 8, bottom: 16),
+          padding: const EdgeInsets.only(top: 8, bottom: 8),
           child: Text(
             '2048消消乐',
             style: TextStyle(
-              fontSize: 28,
+              fontSize: 24,
               fontWeight: FontWeight.bold,
               color: GameColors.textColor,
             ),
           ),
         ),
-        Center(
-          child: BoardWidget(
-            board: _gameLogic.board,
-            size: boardSize,
+        Expanded(
+          flex: 3,
+          child: Center(
+            child: BoardWidget(
+              board: _gameLogic.board,
+              size: boardSize,
+            ),
           ),
         ),
-        const SizedBox(height: 24),
+        const SizedBox(height: 16),
         Expanded(
+          flex: 4,
           child: SingleChildScrollView(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
