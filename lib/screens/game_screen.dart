@@ -340,8 +340,10 @@ class _GameScreenState extends State<GameScreen> {
     return LayoutBuilder(
       builder: (context, constraints) {
         double minDimension = min(constraints.maxWidth, constraints.maxHeight);
-        double boardSize = minDimension * 5 / 6;
         bool isPortrait = constraints.maxHeight > constraints.maxWidth;
+        double boardSize = isPortrait
+            ? min(constraints.maxWidth, constraints.maxHeight * 0.65)
+            : minDimension * 5 / 6;
 
         return Stack(
           children: [
@@ -374,18 +376,18 @@ class _GameScreenState extends State<GameScreen> {
     return Column(
       children: [
         Padding(
-          padding: const EdgeInsets.only(top: 8, bottom: 8),
+          padding: const EdgeInsets.only(top: 4, bottom: 4),
           child: Text(
             '2048消消乐',
             style: TextStyle(
-              fontSize: 24,
+              fontSize: 22,
               fontWeight: FontWeight.bold,
               color: GameColors.textColor,
             ),
           ),
         ),
-        Expanded(
-          flex: 3,
+        SizedBox(
+          height: boardSize + 32,
           child: Center(
             child: BoardWidget(
               board: _gameLogic.board,
@@ -393,9 +395,8 @@ class _GameScreenState extends State<GameScreen> {
             ),
           ),
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 8),
         Expanded(
-          flex: 4,
           child: SingleChildScrollView(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -407,16 +408,17 @@ class _GameScreenState extends State<GameScreen> {
                   isTimedMode: _gameLogic.currentMode == GameMode.timed,
                   isVerticalButtons: true,
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 12),
                 CurrentScorePanel(score: _gameLogic.score),
-                const SizedBox(height: 16),
+                const SizedBox(height: 12),
                 HighestScoresPanel(
                   timedHighestScore: _storageService.getHighestScore(GameMode.timed),
                   unlimitedHighestScore: _storageService.getHighestScore(GameMode.unlimited),
                   bestTime: _storageService.getBestTime(),
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 12),
                 _buildNewGameButton(),
+                const SizedBox(height: 12),
               ],
             ),
           ),
