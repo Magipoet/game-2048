@@ -386,16 +386,6 @@ class _GameScreenState extends State<GameScreen> {
             ),
           ),
         ),
-        SizedBox(
-          height: boardSize + 32,
-          child: Center(
-            child: BoardWidget(
-              board: _gameLogic.board,
-              size: boardSize,
-            ),
-          ),
-        ),
-        const SizedBox(height: 8),
         Expanded(
           child: SingleChildScrollView(
             child: Column(
@@ -406,7 +396,7 @@ class _GameScreenState extends State<GameScreen> {
                   onModeChanged: _changeMode,
                   timeDisplay: _gameLogic.getFormattedTime(),
                   isTimedMode: _gameLogic.currentMode == GameMode.timed,
-                  isVerticalButtons: true,
+                  isVerticalButtons: false,
                 ),
                 const SizedBox(height: 12),
                 CurrentScorePanel(score: _gameLogic.score),
@@ -420,6 +410,16 @@ class _GameScreenState extends State<GameScreen> {
                 _buildNewGameButton(),
                 const SizedBox(height: 12),
               ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 8),
+        SizedBox(
+          height: boardSize + 32,
+          child: Center(
+            child: BoardWidget(
+              board: _gameLogic.board,
+              size: boardSize,
             ),
           ),
         ),
