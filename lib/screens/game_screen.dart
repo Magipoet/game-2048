@@ -342,7 +342,7 @@ class _GameScreenState extends State<GameScreen> {
         double minDimension = min(constraints.maxWidth, constraints.maxHeight);
         bool isPortrait = constraints.maxHeight > constraints.maxWidth;
         double boardSize = isPortrait
-            ? min(constraints.maxWidth, constraints.maxHeight * 0.65)
+            ? min(constraints.maxWidth, constraints.maxHeight * 0.70)
             : minDimension * 5 / 6;
 
         return Stack(
@@ -397,9 +397,23 @@ class _GameScreenState extends State<GameScreen> {
                   timeDisplay: _gameLogic.getFormattedTime(),
                   isTimedMode: _gameLogic.currentMode == GameMode.timed,
                   isVerticalButtons: false,
+                  showTimePanel: false,
                 ),
                 const SizedBox(height: 12),
-                CurrentScorePanel(score: _gameLogic.score),
+                Row(
+                  children: [
+                    Expanded(
+                      child: CurrentScorePanel(score: _gameLogic.score),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: TimePanel(
+                        timeDisplay: _gameLogic.getFormattedTime(),
+                        isTimedMode: _gameLogic.currentMode == GameMode.timed,
+                      ),
+                    ),
+                  ],
+                ),
                 const SizedBox(height: 12),
                 HighestScoresPanel(
                   timedHighestScore: _storageService.getHighestScore(GameMode.timed),

@@ -9,6 +9,7 @@ class ModeSelector extends StatelessWidget {
   final String timeDisplay;
   final bool isTimedMode;
   final bool isVerticalButtons;
+  final bool showTimePanel;
 
   const ModeSelector({
     super.key,
@@ -17,6 +18,7 @@ class ModeSelector extends StatelessWidget {
     required this.timeDisplay,
     required this.isTimedMode,
     this.isVerticalButtons = false,
+    this.showTimePanel = true,
   });
 
   @override
@@ -33,66 +35,59 @@ class ModeSelector extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 12),
-        isVerticalButtons
-            ? _buildVerticalButtons()
-            : _buildHorizontalButtons(),
-        const SizedBox(height: 16),
-        Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: GameColors.scoreBackground,
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                isTimedMode ? '剩余时间' : '已用时间',
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold,
-                  color: GameColors.scoreTextColor.withOpacity(0.7),
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                timeDisplay,
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: GameColors.scoreTextColor,
-                ),
-              ),
-            ],
-          ),
+        SizedBox(
+          width: double.infinity,
+          child: isVerticalButtons
+              ? _buildVerticalButtons()
+              : _buildHorizontalButtons(),
         ),
+        if (showTimePanel) ...[
+          const SizedBox(height: 16),
+          TimePanel(
+            timeDisplay: timeDisplay,
+            isTimedMode: isTimedMode,
+          ),
+        ],
       ],
     );
   }
 
   Widget _buildHorizontalButtons() {
-    return ToggleButtons(
-      isSelected: [
-        currentMode == GameMode.timed,
-        currentMode == GameMode.unlimited,
-      ],
-      onPressed: (index) {
-        onModeChanged(index == 0 ? GameMode.timed : GameMode.unlimited);
-      },
-      borderRadius: BorderRadius.circular(8),
-      selectedColor: Colors.white,
-      fillColor: GameColors.buttonBackground,
-      color: GameColors.textColor,
-      children: const [
-        Padding(
-          padding: EdgeInsets.symmetric(horizontal: 16),
-          child: Text('限时 10 分钟'),
-        ),
-        Padding(
-          padding: EdgeInsets.symmetric(horizontal: 16),
-          child: Text('不限时'),
-        ),
-      ],
+    return SizedBox(
+      width: double.infinity,
+      child: Row(
+        children: [
+          Expanded(
+            child: ToggleButtons(
+              isSelected: [
+                currentMode == GameMode.timed,
+                currentMode == GameMode.unlimited,
+              ],
+              onPressed: (index) {
+                onModeChanged(index == 0 ? GameMode.timed : GameMode.unlimited);
+              },
+              borderRadius: BorderRadius.circular(8),
+              selectedColor: Colors.white,
+              fillColor: GameColors.buttonBackground,
+              color: GameColors.textColor,
+              children: [
+                Expanded(
+                  child: Container(
+                    alignment: Alignment.center,
+                    child: const Text('限时 10 分钟'),
+                  ),
+                ),
+                Expanded(
+                  child: Container(
+                    alignment: Alignment.center,
+                    child: const Text('不限时'),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -152,6 +147,50 @@ class ModeSelector extends StatelessWidget {
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+class TimePanel extends StatelessWidget {
+  final String timeDisplay;
+  final bool isTimedMode;
+
+  const TimePanel({
+    super.key,
+    required this.timeDisplay,
+    required this.isTimedMode,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: GameColors.scoreBackground,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            isTimedMode ? '剩余时间' : '已用时间',
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+              color: GameColors.scoreTextColor.withOpacity(0.7),
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            timeDisplay,
+            style: TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              color: GameColors.scoreTextColor,
+            ),
+          ),
+        ],
       ),
     );
   }
