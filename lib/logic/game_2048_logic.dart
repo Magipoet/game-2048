@@ -20,6 +20,7 @@ class Game2048Logic extends ChangeNotifier {
   bool _gameOver;
   bool _gameWon;
   bool _continueAfterWin;
+  bool _timerStarted;
   
   GameMode _currentMode = GameMode.unlimited;
   int _elapsedSeconds = 0;
@@ -31,7 +32,8 @@ class Game2048Logic extends ChangeNotifier {
     _score = 0,
     _gameOver = false,
     _gameWon = false,
-    _continueAfterWin = false;
+    _continueAfterWin = false,
+    _timerStarted = false;
 
   void initGame() {
     _board = GameBoard();
@@ -40,6 +42,7 @@ class Game2048Logic extends ChangeNotifier {
     _gameWon = false;
     _continueAfterWin = false;
     _elapsedSeconds = 0;
+    _timerStarted = false;
     _addRandomTile();
     _addRandomTile();
   }
@@ -55,6 +58,7 @@ class Game2048Logic extends ChangeNotifier {
   void startTimer() {
     _gameTimer?.cancel();
     _elapsedSeconds = 0;
+    _timerStarted = true;
     _gameTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
       _elapsedSeconds++;
       notifyListeners();
@@ -69,6 +73,13 @@ class Game2048Logic extends ChangeNotifier {
 
   void stopTimer() {
     _gameTimer?.cancel();
+    _timerStarted = false;
+  }
+
+  void startTimerIfNeeded() {
+    if (!_timerStarted) {
+      startTimer();
+    }
   }
 
   void pauseTimer() {
@@ -116,6 +127,7 @@ class Game2048Logic extends ChangeNotifier {
     bool isValid = !originalBoard.equals(_board);
 
     if (isValid) {
+      startTimerIfNeeded();
       _score += scoreAdded;
       _addRandomTile();
       _checkGameState();

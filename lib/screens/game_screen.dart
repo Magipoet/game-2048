@@ -49,7 +49,6 @@ class _GameScreenState extends State<GameScreen> {
     setState(() {
       _isInitialized = true;
       _gameLogic.initGame();
-      _gameLogic.startTimer();
     });
   }
 
@@ -118,7 +117,6 @@ class _GameScreenState extends State<GameScreen> {
     setState(() {
       _gameLogic.stopTimer();
       _gameLogic.initGame();
-      _gameLogic.startTimer();
       _showWinDialog = false;
       _showGameOverDialog = false;
     });
@@ -154,7 +152,6 @@ class _GameScreenState extends State<GameScreen> {
     if (_gameLogic.currentMode != mode) {
       setState(() {
         _gameLogic.setMode(mode);
-        _gameLogic.startTimer();
         _showWinDialog = false;
         _showGameOverDialog = false;
       });
