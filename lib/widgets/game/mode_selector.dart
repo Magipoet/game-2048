@@ -55,28 +55,77 @@ class ModeSelector extends StatelessWidget {
   Widget _buildHorizontalButtons() {
     return SizedBox(
       width: double.infinity,
-      child: ToggleButtons(
-        isSelected: [
-          currentMode == GameMode.timed,
-          currentMode == GameMode.unlimited,
-        ],
-        onPressed: (index) {
-          onModeChanged(index == 0 ? GameMode.timed : GameMode.unlimited);
-        },
-        borderRadius: BorderRadius.circular(8),
-        selectedColor: Colors.white,
-        fillColor: GameColors.buttonBackground,
-        color: GameColors.textColor,
+      child: Row(
         children: [
-          Container(
-            alignment: Alignment.center,
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
-            child: const Text('限时 10 分钟'),
+          Expanded(
+            child: InkWell(
+              onTap: () => onModeChanged(GameMode.timed),
+              borderRadius: const BorderRadius.horizontal(left: Radius.circular(8)),
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                decoration: BoxDecoration(
+                  color: currentMode == GameMode.timed
+                      ? GameColors.buttonBackground
+                      : Colors.transparent,
+                  border: Border.all(
+                    color: GameColors.buttonBackground,
+                    width: 1.5,
+                  ),
+                  borderRadius: const BorderRadius.horizontal(left: Radius.circular(8)),
+                ),
+                child: Text(
+                  '限时 10 分钟',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                    color: currentMode == GameMode.timed
+                        ? Colors.white
+                        : GameColors.textColor,
+                  ),
+                ),
+              ),
+            ),
           ),
-          Container(
-            alignment: Alignment.center,
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
-            child: const Text('不限时'),
+          Expanded(
+            child: InkWell(
+              onTap: () => onModeChanged(GameMode.unlimited),
+              borderRadius: const BorderRadius.horizontal(right: Radius.circular(8)),
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                decoration: BoxDecoration(
+                  color: currentMode == GameMode.unlimited
+                      ? GameColors.buttonBackground
+                      : Colors.transparent,
+                  border: Border(
+                    top: BorderSide(
+                      color: GameColors.buttonBackground,
+                      width: 1.5,
+                    ),
+                    right: BorderSide(
+                      color: GameColors.buttonBackground,
+                      width: 1.5,
+                    ),
+                    bottom: BorderSide(
+                      color: GameColors.buttonBackground,
+                      width: 1.5,
+                    ),
+                  ),
+                  borderRadius: const BorderRadius.horizontal(right: Radius.circular(8)),
+                ),
+                child: Text(
+                  '不限时',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                    color: currentMode == GameMode.unlimited
+                        ? Colors.white
+                        : GameColors.textColor,
+                  ),
+                ),
+              ),
+            ),
           ),
         ],
       ),
