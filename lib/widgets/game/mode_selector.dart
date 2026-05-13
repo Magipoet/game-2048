@@ -55,36 +55,30 @@ class ModeSelector extends StatelessWidget {
   Widget _buildHorizontalButtons() {
     return SizedBox(
       width: double.infinity,
-      child: Row(
+      child: ToggleButtons(
+        isSelected: [
+          currentMode == GameMode.timed,
+          currentMode == GameMode.unlimited,
+        ],
+        onPressed: (index) {
+          onModeChanged(index == 0 ? GameMode.timed : GameMode.unlimited);
+        },
+        borderRadius: BorderRadius.circular(8),
+        selectedColor: Colors.white,
+        fillColor: GameColors.buttonBackground,
+        color: GameColors.textColor,
         children: [
-          Expanded(
-            child: ToggleButtons(
-              isSelected: [
-                currentMode == GameMode.timed,
-                currentMode == GameMode.unlimited,
-              ],
-              onPressed: (index) {
-                onModeChanged(index == 0 ? GameMode.timed : GameMode.unlimited);
-              },
-              borderRadius: BorderRadius.circular(8),
-              selectedColor: Colors.white,
-              fillColor: GameColors.buttonBackground,
-              color: GameColors.textColor,
-              children: [
-                Expanded(
-                  child: Container(
-                    alignment: Alignment.center,
-                    child: const Text('限时 10 分钟'),
-                  ),
-                ),
-                Expanded(
-                  child: Container(
-                    alignment: Alignment.center,
-                    child: const Text('不限时'),
-                  ),
-                ),
-              ],
-            ),
+          Container(
+            width: double.infinity,
+            alignment: Alignment.center,
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            child: const Text('限时 10 分钟'),
+          ),
+          Container(
+            width: double.infinity,
+            alignment: Alignment.center,
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            child: const Text('不限时'),
           ),
         ],
       ),
