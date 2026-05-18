@@ -53,7 +53,7 @@ class GestureInputHandler extends StatelessWidget {
 
         _startPosition = null;
       },
-      behavior: HitTestBehavior.opaque,
+      behavior: HitTestBehavior.translucent,
       child: child,
     );
   }
