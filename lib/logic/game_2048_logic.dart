@@ -3,6 +3,7 @@ import 'dart:math';
 
 import 'package:flutter/foundation.dart';
 
+import '../models/cell_type.dart';
 import '../models/game_board.dart';
 import '../models/game_mode.dart';
 import '../models/move_result.dart';
@@ -21,19 +22,24 @@ class Game2048Logic extends ChangeNotifier {
   bool _gameWon;
   bool _continueAfterWin;
   bool _timerStarted;
-  
+
   GameMode _currentMode = GameMode.unlimited;
+  GameVariant _currentVariant = GameVariant.normal;
   int _elapsedSeconds = 0;
   Timer? _gameTimer;
   static const int _timedModeDuration = 10 * 60;
+  static const int _woodBlockRequiredMerges = 4;
+  static const int _iceBlockMaxMoves = 4;
 
-  Game2048Logic() : 
-    _board = GameBoard(),
-    _score = 0,
-    _gameOver = false,
-    _gameWon = false,
-    _continueAfterWin = false,
-    _timerStarted = false;
+  final Random _random = Random();
+
+  Game2048Logic()
+      : _board = GameBoard(),
+        _score = 0,
+        _gameOver = false,
+        _gameWon = false,
+        _continueAfterWin = false,
+        _timerStarted = false;
 
   void initGame() {
     _board = GameBoard();
@@ -45,11 +51,24 @@ class Game2048Logic extends ChangeNotifier {
     _timerStarted = false;
     _addRandomTile();
     _addRandomTile();
+
+    if (_currentVariant == GameVariant.fun) {
+      _trySpawnWoodBlock();
+      _trySpawnIceBlock();
+    }
   }
 
   void setMode(GameMode mode) {
     if (_currentMode != mode) {
       _currentMode = mode;
+      stopTimer();
+      initGame();
+    }
+  }
+
+  void setVariant(GameVariant variant) {
+    if (_currentVariant != variant) {
+      _currentVariant = variant;
       stopTimer();
       initGame();
     }
@@ -62,8 +81,9 @@ class Game2048Logic extends ChangeNotifier {
     _gameTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
       _elapsedSeconds++;
       notifyListeners();
-      
-      if (_currentMode == GameMode.timed && _elapsedSeconds >= _timedModeDuration) {
+
+      if (_currentMode == GameMode.timed &&
+          _elapsedSeconds >= _timedModeDuration) {
         _gameOver = true;
         _gameTimer?.cancel();
         notifyListeners();
@@ -88,12 +108,13 @@ class Game2048Logic extends ChangeNotifier {
 
   void resumeTimer() {
     if (_gameOver) return;
-    
+
     _gameTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
       _elapsedSeconds++;
       notifyListeners();
-      
-      if (_currentMode == GameMode.timed && _elapsedSeconds >= _timedModeDuration) {
+
+      if (_currentMode == GameMode.timed &&
+          _elapsedSeconds >= _timedModeDuration) {
         _gameOver = true;
         _gameTimer?.cancel();
         notifyListeners();
@@ -108,19 +129,20 @@ class Game2048Logic extends ChangeNotifier {
 
     GameBoard originalBoard = _board.clone();
     int scoreAdded = 0;
+    List<(int, int)> mergePositions = [];
 
     switch (direction) {
       case Direction.left:
-        scoreAdded = _moveLeft();
+        scoreAdded = _moveLeft(mergePositions);
         break;
       case Direction.right:
-        scoreAdded = _moveRight();
+        scoreAdded = _moveRight(mergePositions);
         break;
       case Direction.up:
-        scoreAdded = _moveUp();
+        scoreAdded = _moveUp(mergePositions);
         break;
       case Direction.down:
-        scoreAdded = _moveDown();
+        scoreAdded = _moveDown(mergePositions);
         break;
     }
 
@@ -129,11 +151,99 @@ class Game2048Logic extends ChangeNotifier {
     if (isValid) {
       startTimerIfNeeded();
       _score += scoreAdded;
+
+      if (_currentVariant == GameVariant.fun) {
+        _processFunModeAfterMove(mergePositions);
+      }
+
       _addRandomTile(direction);
       _checkGameState();
     }
 
     return MoveResult(isValid: isValid, scoreAdded: scoreAdded);
+  }
+
+  void _processFunModeAfterMove(List<(int, int)> mergePositions) {
+    final woodBlockPos = _board.findWoodBlock();
+    if (woodBlockPos != null) {
+      int mergeCount = 0;
+      final adjacentCells =
+          _board.getAdjacentCells(woodBlockPos.$1, woodBlockPos.$2);
+      for (final mergePos in mergePositions) {
+        if (adjacentCells.contains(mergePos)) {
+          mergeCount++;
+        }
+      }
+
+      if (mergeCount > 0) {
+        final woodCell = _board.getCell(woodBlockPos.$1, woodBlockPos.$2);
+        final newRemaining = (woodCell.remainingMerges ?? 0) - mergeCount;
+        if (newRemaining <= 0) {
+          _board.setCell(woodBlockPos.$1, woodBlockPos.$2, Cell.empty());
+        } else {
+          _board.setCell(
+            woodBlockPos.$1,
+            woodBlockPos.$2,
+            woodCell.copyWith(remainingMerges: newRemaining),
+          );
+        }
+      }
+    }
+
+    _decrementIceBlocks(mergePositions);
+    _trySpawnWoodBlock();
+    _trySpawnIceBlock();
+  }
+
+  void _decrementIceBlocks(List<(int, int)> mergePositions) {
+    List<(int, int, Cell)> cellsToUpdate = [];
+
+    for (int i = 0; i < GameBoard.size; i++) {
+      for (int j = 0; j < GameBoard.size; j++) {
+        final cell = _board.getCell(i, j);
+        if (cell.isIceBlock) {
+          int newRemaining = (cell.remainingMoves ?? 0) - 1;
+          if (mergePositions.contains((i, j))) {
+            newRemaining -= 1;
+          }
+          if (newRemaining <= 0) {
+            cellsToUpdate.add((i, j, Cell.number(cell.value)));
+          } else {
+            cellsToUpdate.add(
+                (i, j, cell.copyWith(remainingMoves: newRemaining)));
+          }
+        }
+      }
+    }
+
+    for (final update in cellsToUpdate) {
+      _board.setCell(update.$1, update.$2, update.$3);
+    }
+  }
+
+  void _trySpawnWoodBlock() {
+    if (_board.hasWoodBlock()) return;
+
+    final emptyCells = _board.getEmptyCells();
+    if (emptyCells.isEmpty) return;
+
+    if (_random.nextDouble() < 0.15) {
+      final pos = emptyCells[_random.nextInt(emptyCells.length)];
+      _board.setCell(
+          pos.$1, pos.$2, Cell.woodBlock(_woodBlockRequiredMerges));
+    }
+  }
+
+  void _trySpawnIceBlock() {
+    final emptyCells = _board.getEmptyCells();
+    if (emptyCells.isEmpty) return;
+
+    if (_random.nextDouble() < 0.1) {
+      final pos = emptyCells[_random.nextInt(emptyCells.length)];
+      int value = _random.nextDouble() < 0.9 ? 2 : 4;
+      _board.setCell(pos.$1, pos.$2,
+          Cell.iceBlock(value: value, remainingMoves: _iceBlockMaxMoves));
+    }
   }
 
   MoveResult safeMove(Direction direction) {
@@ -145,88 +255,131 @@ class Game2048Logic extends ChangeNotifier {
     }
   }
 
-  int _moveLeft() {
+  int _moveLeft(List<(int, int)> mergePositions) {
     int scoreAdded = 0;
     for (int row = 0; row < GameBoard.size; row++) {
-      List<int> rowData = List.generate(GameBoard.size, (col) => _board.getValue(row, col));
-      RowResult result = _processRowLeft(rowData);
+      List<Cell> rowData =
+          List.generate(GameBoard.size, (col) => _board.getCell(row, col));
+      RowResult result = _processRowLeft(rowData, mergePositions, row);
       scoreAdded += result.scoreAdded;
       for (int col = 0; col < GameBoard.size; col++) {
-        _board.setValue(row, col, result.row[col]);
+        _board.setCell(row, col, result.cells[col]);
       }
     }
     return scoreAdded;
   }
 
-  int _moveRight() {
+  int _moveRight(List<(int, int)> mergePositions) {
     int scoreAdded = 0;
     for (int row = 0; row < GameBoard.size; row++) {
-      List<int> rowData = List.generate(GameBoard.size, (col) => _board.getValue(row, col));
-      RowResult result = _processRowRight(rowData);
+      List<Cell> rowData =
+          List.generate(GameBoard.size, (col) => _board.getCell(row, col));
+      RowResult result = _processRowRight(rowData, mergePositions, row);
       scoreAdded += result.scoreAdded;
       for (int col = 0; col < GameBoard.size; col++) {
-        _board.setValue(row, col, result.row[col]);
+        _board.setCell(row, col, result.cells[col]);
       }
     }
     return scoreAdded;
   }
 
-  int _moveUp() {
+  int _moveUp(List<(int, int)> mergePositions) {
     int scoreAdded = 0;
     for (int col = 0; col < GameBoard.size; col++) {
-      List<int> colData = List.generate(GameBoard.size, (row) => _board.getValue(row, col));
-      RowResult result = _processRowLeft(colData);
+      List<Cell> colData =
+          List.generate(GameBoard.size, (row) => _board.getCell(row, col));
+      RowResult result = _processRowLeft(colData, mergePositions, -1, col);
       scoreAdded += result.scoreAdded;
       for (int row = 0; row < GameBoard.size; row++) {
-        _board.setValue(row, col, result.row[row]);
+        _board.setCell(row, col, result.cells[row]);
       }
     }
     return scoreAdded;
   }
 
-  int _moveDown() {
+  int _moveDown(List<(int, int)> mergePositions) {
     int scoreAdded = 0;
     for (int col = 0; col < GameBoard.size; col++) {
-      List<int> colData = List.generate(GameBoard.size, (row) => _board.getValue(row, col));
-      RowResult result = _processRowRight(colData);
+      List<Cell> colData =
+          List.generate(GameBoard.size, (row) => _board.getCell(row, col));
+      RowResult result = _processRowRight(colData, mergePositions, -1, col);
       scoreAdded += result.scoreAdded;
       for (int row = 0; row < GameBoard.size; row++) {
-        _board.setValue(row, col, result.row[row]);
+        _board.setCell(row, col, result.cells[row]);
       }
     }
     return scoreAdded;
   }
 
-  RowResult _processRowLeft(List<int> row) {
+  RowResult _processRowLeft(List<Cell> row, List<(int, int)> mergePositions,
+      [int rowIdx = -1, int colIdx = -1]) {
     int scoreAdded = 0;
-    List<int> nonZero = row.where((value) => value != 0).toList();
-    List<int> merged = [];
+    List<Cell> result = [];
 
     int i = 0;
-    while (i < nonZero.length) {
-      if (i + 1 < nonZero.length && nonZero[i] == nonZero[i + 1]) {
-        int mergedValue = nonZero[i] * 2;
-        merged.add(mergedValue);
-        scoreAdded += mergedValue;
-        i += 2;
-      } else {
-        merged.add(nonZero[i]);
+    while (i < row.length) {
+      final cell = row[i];
+
+      if (cell.isWoodBlock || cell.isIceBlock) {
+        if (result.isNotEmpty && result.last.isEmpty) {
+          result.removeLast();
+        }
+        result.add(cell);
         i++;
+        continue;
       }
+
+      if (cell.isEmpty) {
+        i++;
+        continue;
+      }
+
+      if (i + 1 < row.length) {
+        Cell nextCell = row[i + 1];
+        int nextIdx = i + 1;
+
+        while (nextIdx < row.length && nextCell.isEmpty) {
+          nextIdx++;
+          if (nextIdx < row.length) {
+            nextCell = row[nextIdx];
+          }
+        }
+
+        if (nextIdx < row.length &&
+            nextCell.isNumber &&
+            nextCell.value == cell.value) {
+          int mergedValue = cell.value * 2;
+          result.add(Cell.number(mergedValue));
+          scoreAdded += mergedValue;
+
+          if (rowIdx >= 0) {
+            mergePositions.add((rowIdx, result.length - 1));
+          } else {
+            mergePositions.add((result.length - 1, colIdx));
+          }
+
+          i = nextIdx + 1;
+          continue;
+        }
+      }
+
+      result.add(cell);
+      i++;
     }
 
-    while (merged.length < GameBoard.size) {
-      merged.add(0);
+    while (result.length < GameBoard.size) {
+      result.add(Cell.empty());
     }
 
-    return RowResult(row: merged, scoreAdded: scoreAdded);
+    return RowResult(cells: result, scoreAdded: scoreAdded);
   }
 
-  RowResult _processRowRight(List<int> row) {
-    List<int> reversedRow = List.from(row.reversed);
-    RowResult result = _processRowLeft(reversedRow);
+  RowResult _processRowRight(List<Cell> row, List<(int, int)> mergePositions,
+      [int rowIdx = -1, int colIdx = -1]) {
+    List<Cell> reversedRow = List.from(row.reversed);
+    RowResult result = _processRowLeft(reversedRow, mergePositions, rowIdx, colIdx);
     return RowResult(
-      row: List.from(result.row.reversed),
+      cells: List.from(result.cells.reversed),
       scoreAdded: result.scoreAdded,
     );
   }
@@ -287,7 +440,8 @@ class Game2048Logic extends ChangeNotifier {
   }
 
   bool _isGameOver() {
-    if (_currentMode == GameMode.timed && _elapsedSeconds >= _timedModeDuration) {
+    if (_currentMode == GameMode.timed &&
+        _elapsedSeconds >= _timedModeDuration) {
       return true;
     }
 
@@ -297,7 +451,11 @@ class Game2048Logic extends ChangeNotifier {
 
     for (int i = 0; i < GameBoard.size; i++) {
       for (int j = 0; j < GameBoard.size - 1; j++) {
-        if (_board.getValue(i, j) == _board.getValue(i, j + 1)) {
+        final cell1 = _board.getCell(i, j);
+        final cell2 = _board.getCell(i, j + 1);
+        if (cell1.isNumber &&
+            cell2.isNumber &&
+            cell1.value == cell2.value) {
           return false;
         }
       }
@@ -305,7 +463,11 @@ class Game2048Logic extends ChangeNotifier {
 
     for (int i = 0; i < GameBoard.size - 1; i++) {
       for (int j = 0; j < GameBoard.size; j++) {
-        if (_board.getValue(i, j) == _board.getValue(i + 1, j)) {
+        final cell1 = _board.getCell(i, j);
+        final cell2 = _board.getCell(i + 1, j);
+        if (cell1.isNumber &&
+            cell2.isNumber &&
+            cell1.value == cell2.value) {
           return false;
         }
       }
@@ -319,10 +481,10 @@ class Game2048Logic extends ChangeNotifier {
   }
 
   String getFormattedTime() {
-    int timeToShow = _currentMode == GameMode.timed 
+    int timeToShow = _currentMode == GameMode.timed
         ? max(0, _timedModeDuration - _elapsedSeconds)
         : _elapsedSeconds;
-    
+
     int minutes = timeToShow ~/ 60;
     int seconds = timeToShow % 60;
     return '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
@@ -338,6 +500,7 @@ class Game2048Logic extends ChangeNotifier {
   bool get shouldShowWinDialog => _gameWon && !_continueAfterWin;
   GameBoard get board => _board;
   GameMode get currentMode => _currentMode;
+  GameVariant get currentVariant => _currentVariant;
   int get elapsedSeconds => _elapsedSeconds;
   int get remainingTime {
     if (_currentMode == GameMode.timed) {

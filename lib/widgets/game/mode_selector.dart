@@ -5,20 +5,26 @@ import '../../utils/game_colors.dart';
 
 class ModeSelector extends StatelessWidget {
   final GameMode currentMode;
+  final GameVariant currentVariant;
   final Function(GameMode) onModeChanged;
+  final Function(GameVariant) onVariantChanged;
   final String timeDisplay;
   final bool isTimedMode;
   final bool isVerticalButtons;
   final bool showTimePanel;
+  final bool showVariantSelector;
 
   const ModeSelector({
     super.key,
     required this.currentMode,
+    required this.currentVariant,
     required this.onModeChanged,
+    required this.onVariantChanged,
     required this.timeDisplay,
     required this.isTimedMode,
     this.isVerticalButtons = false,
     this.showTimePanel = true,
+    this.showVariantSelector = true,
   });
 
   @override
@@ -41,6 +47,10 @@ class ModeSelector extends StatelessWidget {
               ? _buildVerticalButtons()
               : _buildHorizontalButtons(),
         ),
+        if (showVariantSelector) ...[
+          const SizedBox(height: 16),
+          _buildVariantSelector(),
+        ],
         if (showTimePanel) ...[
           const SizedBox(height: 16),
           TimePanel(
@@ -48,6 +58,104 @@ class ModeSelector extends StatelessWidget {
             isTimedMode: isTimedMode,
           ),
         ],
+      ],
+    );
+  }
+
+  Widget _buildVariantSelector() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          '游戏变体',
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            color: GameColors.textColor,
+          ),
+        ),
+        const SizedBox(height: 8),
+        SizedBox(
+          width: double.infinity,
+          child: Row(
+            children: [
+              Expanded(
+                child: InkWell(
+                  onTap: () => onVariantChanged(GameVariant.normal),
+                  borderRadius:
+                      const BorderRadius.horizontal(left: Radius.circular(8)),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(vertical: 10),
+                    decoration: BoxDecoration(
+                      color: currentVariant == GameVariant.normal
+                          ? GameColors.buttonBackground
+                          : Colors.transparent,
+                      border: Border.all(
+                        color: GameColors.buttonBackground,
+                        width: 1.5,
+                      ),
+                      borderRadius: const BorderRadius.horizontal(
+                          left: Radius.circular(8)),
+                    ),
+                    child: Text(
+                      '常规模式',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                        color: currentVariant == GameVariant.normal
+                            ? Colors.white
+                            : GameColors.textColor,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              Expanded(
+                child: InkWell(
+                  onTap: () => onVariantChanged(GameVariant.fun),
+                  borderRadius:
+                      const BorderRadius.horizontal(right: Radius.circular(8)),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(vertical: 10),
+                    decoration: BoxDecoration(
+                      color: currentVariant == GameVariant.fun
+                          ? GameColors.buttonBackground
+                          : Colors.transparent,
+                      border: Border(
+                        top: BorderSide(
+                          color: GameColors.buttonBackground,
+                          width: 1.5,
+                        ),
+                        right: BorderSide(
+                          color: GameColors.buttonBackground,
+                          width: 1.5,
+                        ),
+                        bottom: BorderSide(
+                          color: GameColors.buttonBackground,
+                          width: 1.5,
+                        ),
+                      ),
+                      borderRadius: const BorderRadius.horizontal(
+                          right: Radius.circular(8)),
+                    ),
+                    child: Text(
+                      '趣味模式',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                        color: currentVariant == GameVariant.fun
+                            ? Colors.white
+                            : GameColors.textColor,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
       ],
     );
   }
@@ -60,7 +168,8 @@ class ModeSelector extends StatelessWidget {
           Expanded(
             child: InkWell(
               onTap: () => onModeChanged(GameMode.timed),
-              borderRadius: const BorderRadius.horizontal(left: Radius.circular(8)),
+              borderRadius:
+                  const BorderRadius.horizontal(left: Radius.circular(8)),
               child: Container(
                 padding: const EdgeInsets.symmetric(vertical: 12),
                 decoration: BoxDecoration(
@@ -71,7 +180,8 @@ class ModeSelector extends StatelessWidget {
                     color: GameColors.buttonBackground,
                     width: 1.5,
                   ),
-                  borderRadius: const BorderRadius.horizontal(left: Radius.circular(8)),
+                  borderRadius:
+                      const BorderRadius.horizontal(left: Radius.circular(8)),
                 ),
                 child: Text(
                   '限时 10 分钟',
@@ -90,7 +200,8 @@ class ModeSelector extends StatelessWidget {
           Expanded(
             child: InkWell(
               onTap: () => onModeChanged(GameMode.unlimited),
-              borderRadius: const BorderRadius.horizontal(right: Radius.circular(8)),
+              borderRadius:
+                  const BorderRadius.horizontal(right: Radius.circular(8)),
               child: Container(
                 padding: const EdgeInsets.symmetric(vertical: 12),
                 decoration: BoxDecoration(
@@ -111,7 +222,8 @@ class ModeSelector extends StatelessWidget {
                       width: 1.5,
                     ),
                   ),
-                  borderRadius: const BorderRadius.horizontal(right: Radius.circular(8)),
+                  borderRadius:
+                      const BorderRadius.horizontal(right: Radius.circular(8)),
                 ),
                 child: Text(
                   '不限时',

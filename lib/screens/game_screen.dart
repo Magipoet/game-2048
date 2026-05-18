@@ -157,6 +157,16 @@ class _GameScreenState extends State<GameScreen> {
     }
   }
 
+  void _changeVariant(GameVariant variant) {
+    if (_gameLogic.currentVariant != variant) {
+      setState(() {
+        _gameLogic.setVariant(variant);
+        _showWinDialog = false;
+        _showGameOverDialog = false;
+      });
+    }
+  }
+
   void _showWinGameDialog() {
     showDialog(
       context: context,
@@ -222,7 +232,8 @@ class _GameScreenState extends State<GameScreen> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              _gameLogic.currentMode == GameMode.timed && _gameLogic.remainingTime <= 0
+              _gameLogic.currentMode == GameMode.timed &&
+                      _gameLogic.remainingTime <= 0
                   ? '时间耗尽！'
                   : '无法继续移动了',
               style: TextStyle(fontSize: 16, color: GameColors.textColor),
@@ -235,7 +246,9 @@ class _GameScreenState extends State<GameScreen> {
                   children: [
                     Text(
                       '最终得分',
-                      style: TextStyle(fontSize: 14, color: GameColors.textColor.withOpacity(0.7)),
+                      style: TextStyle(
+                          fontSize: 14,
+                          color: GameColors.textColor.withOpacity(0.7)),
                     ),
                     Text(
                       '${_gameLogic.score}',
@@ -251,7 +264,9 @@ class _GameScreenState extends State<GameScreen> {
                   children: [
                     Text(
                       '最大数字',
-                      style: TextStyle(fontSize: 14, color: GameColors.textColor.withOpacity(0.7)),
+                      style: TextStyle(
+                          fontSize: 14,
+                          color: GameColors.textColor.withOpacity(0.7)),
                     ),
                     Text(
                       '${_gameLogic.maxTile}',
@@ -349,7 +364,6 @@ class _GameScreenState extends State<GameScreen> {
                   ? _buildPortraitLayout(boardSize)
                   : _buildLandscapeLayout(boardSize),
             ),
-
             Positioned(
               top: 16,
               right: 16,
@@ -360,7 +374,6 @@ class _GameScreenState extends State<GameScreen> {
                 tooltip: '游戏帮助',
               ),
             ),
-
             if (_showHelpDialog) _buildHelpDialog(),
           ],
         );
@@ -389,7 +402,9 @@ class _GameScreenState extends State<GameScreen> {
               children: [
                 ModeSelector(
                   currentMode: _gameLogic.currentMode,
+                  currentVariant: _gameLogic.currentVariant,
                   onModeChanged: _changeMode,
+                  onVariantChanged: _changeVariant,
                   timeDisplay: _gameLogic.getFormattedTime(),
                   isTimedMode: _gameLogic.currentMode == GameMode.timed,
                   isVerticalButtons: false,
@@ -412,8 +427,10 @@ class _GameScreenState extends State<GameScreen> {
                 ),
                 const SizedBox(height: 12),
                 HighestScoresPanel(
-                  timedHighestScore: _storageService.getHighestScore(GameMode.timed),
-                  unlimitedHighestScore: _storageService.getHighestScore(GameMode.unlimited),
+                  timedHighestScore:
+                      _storageService.getHighestScore(GameMode.timed),
+                  unlimitedHighestScore:
+                      _storageService.getHighestScore(GameMode.unlimited),
                   bestTime: _storageService.getBestTime(),
                 ),
                 const SizedBox(height: 12),
@@ -477,7 +494,9 @@ class _GameScreenState extends State<GameScreen> {
                 const SizedBox(height: 50),
                 ModeSelector(
                   currentMode: _gameLogic.currentMode,
+                  currentVariant: _gameLogic.currentVariant,
                   onModeChanged: _changeMode,
+                  onVariantChanged: _changeVariant,
                   timeDisplay: _gameLogic.getFormattedTime(),
                   isTimedMode: _gameLogic.currentMode == GameMode.timed,
                   isVerticalButtons: false,
@@ -486,8 +505,10 @@ class _GameScreenState extends State<GameScreen> {
                 CurrentScorePanel(score: _gameLogic.score),
                 const SizedBox(height: 16),
                 HighestScoresPanel(
-                  timedHighestScore: _storageService.getHighestScore(GameMode.timed),
-                  unlimitedHighestScore: _storageService.getHighestScore(GameMode.unlimited),
+                  timedHighestScore:
+                      _storageService.getHighestScore(GameMode.timed),
+                  unlimitedHighestScore:
+                      _storageService.getHighestScore(GameMode.unlimited),
                   bestTime: _storageService.getBestTime(),
                 ),
                 const SizedBox(height: 24),
@@ -536,43 +557,68 @@ class _GameScreenState extends State<GameScreen> {
           child: SingleChildScrollView(
             child: AlertDialog(
               title: const Text('游戏玩法说明'),
-              content: const Column(
+              content: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text(
+                  const Text(
                     '基本规则',
                     style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                   ),
-                  SizedBox(height: 8),
-                  Text('• 使用方向键（↑↓←→）或滑动屏幕移动方块'),
-                  Text('• 相同数字的方块碰撞时会合并为两者之和'),
-                  Text('• 每次有效移动后，空白处会随机出现 2 或 4'),
-                  Text('• 合并数字会获得分数（例如 2+2=4，获得 4 分）'),
-                  SizedBox(height: 16),
-                  Text(
+                  const SizedBox(height: 8),
+                  const Text('• 使用方向键（↑↓←→）或滑动屏幕移动方块'),
+                  const Text('• 相同数字的方块碰撞时会合并为两者之和'),
+                  const Text('• 每次有效移动后，空白处会随机出现 2 或 4'),
+                  const Text('• 合并数字会获得分数（例如 2+2=4，获得 4 分）'),
+                  const SizedBox(height: 16),
+                  const Text(
                     '游戏模式',
                     style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                   ),
-                  SizedBox(height: 8),
-                  Text('• 限时 10 分钟：在 10 分钟内尽可能获得高分'),
-                  Text('• 不限时：无时间限制，但会记录游戏时间'),
-                  SizedBox(height: 16),
-                  Text(
+                  const SizedBox(height: 8),
+                  const Text('• 限时 10 分钟：在 10 分钟内尽可能获得高分'),
+                  const Text('• 不限时：无时间限制，但会记录游戏时间'),
+                  const SizedBox(height: 16),
+                  const Text(
+                    '游戏变体',
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                  ),
+                  const SizedBox(height: 8),
+                  const Text('• 常规模式：经典 2048 玩法'),
+                  const Text('• 趣味模式：加入木块和冰块特殊元素'),
+                  const SizedBox(height: 8),
+                  const Text(
+                    '  🪵 木块：',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  const Text('    - 随机生成，不会移动'),
+                  const Text('    - 周围发生 4 次合并后消失'),
+                  const Text('    - 显示剩余需要合并的次数'),
+                  const SizedBox(height: 4),
+                  const Text(
+                    '  ❄️ 冰块：',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  const Text('    - 内部包含数字，数字无法移动'),
+                  const Text('    - 最多存在 4 次滑动'),
+                  const Text('    - 内部数字合并时额外减少 1 次'),
+                  const Text('    - 显示剩余滑动次数'),
+                  const SizedBox(height: 16),
+                  const Text(
                     '游戏结束',
                     style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                   ),
-                  SizedBox(height: 8),
-                  Text('• 棋盘被填满且无法合并任何方块时游戏结束'),
-                  Text('• 限时模式中时间耗尽也会结束游戏'),
-                  SizedBox(height: 16),
-                  Text(
+                  const SizedBox(height: 8),
+                  const Text('• 棋盘被填满且无法合并任何方块时游戏结束'),
+                  const Text('• 限时模式中时间耗尽也会结束游戏'),
+                  const SizedBox(height: 16),
+                  const Text(
                     '游戏目标',
                     style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                   ),
-                  SizedBox(height: 8),
-                  Text('• 合成出 2048 即可获胜'),
-                  Text('• 获胜后可继续游戏挑战更高分数'),
+                  const SizedBox(height: 8),
+                  const Text('• 合成出 2048 即可获胜'),
+                  const Text('• 获胜后可继续游戏挑战更高分数'),
                 ],
               ),
               actions: [

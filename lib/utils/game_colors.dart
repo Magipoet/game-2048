@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../models/cell_type.dart';
+
 class GameColors {
   static const Color backgroundColor = Color(0xFFFAF8EF);
   static const Color boardBackground = Color(0xFFBBADA0);
@@ -10,7 +12,18 @@ class GameColors {
   static const Color scoreTextColor = Color(0xFFFFFFFF);
   static const Color buttonTextColor = Color(0xFFFFFFFF);
 
-  static Color getTileColor(int value) {
+  static const Color woodBlockColor = Color(0xFF8B4513);
+  static const Color woodBlockTextColor = Color(0xFFFFFFFF);
+  static const Color iceBlockColor = Color(0xFF87CEEB);
+  static const Color iceBlockTextColor = Color(0xFF2F4F4F);
+
+  static Color getTileColor(int value, {CellType? cellType}) {
+    if (cellType == CellType.woodBlock) {
+      return woodBlockColor;
+    }
+    if (cellType == CellType.iceBlock) {
+      return iceBlockColor;
+    }
     switch (value) {
       case 2:
         return const Color(0xFFEEE4DA);
@@ -39,11 +52,20 @@ class GameColors {
     }
   }
 
-  static Color getTileTextColor(int value) {
+  static Color getTileTextColor(int value, {CellType? cellType}) {
+    if (cellType == CellType.woodBlock) {
+      return woodBlockTextColor;
+    }
+    if (cellType == CellType.iceBlock) {
+      return iceBlockTextColor;
+    }
     return value <= 4 ? const Color(0xFF776E65) : const Color(0xFFF9F6F2);
   }
 
-  static double getTileFontSize(int value) {
+  static double getTileFontSize(int value, {CellType? cellType}) {
+    if (cellType == CellType.woodBlock || cellType == CellType.iceBlock) {
+      return 14;
+    }
     if (value < 100) {
       return 32;
     } else if (value < 1000) {

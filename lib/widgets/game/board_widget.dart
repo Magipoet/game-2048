@@ -35,9 +35,9 @@ class BoardWidget extends StatelessWidget {
         itemBuilder: (context, index) {
           int row = index ~/ 4;
           int col = index % 4;
-          int value = board.getValue(row, col);
+          final cell = board.getCell(row, col);
 
-          return TileWidget(value: value);
+          return TileWidget(cell: cell);
         },
       ),
     );

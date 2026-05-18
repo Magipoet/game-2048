@@ -1,3 +1,5 @@
+import 'cell_type.dart';
+
 class MoveResult {
   final bool isValid;
   final int scoreAdded;
@@ -9,11 +11,11 @@ class MoveResult {
 }
 
 class RowResult {
-  final List<int> row;
+  final List<Cell> cells;
   final int scoreAdded;
 
   RowResult({
-    required this.row,
+    required this.cells,
     required this.scoreAdded,
   });
 }
