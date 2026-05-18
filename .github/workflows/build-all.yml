@@ -157,16 +157,21 @@ jobs:
         
         Compress-Archive -Path $distDir -DestinationPath "${{ env.APP_NAME }}-windows.zip"
 
-    - name: Upload Windows ZIP as Artifact
-      uses: actions/upload-artifact@v7
+    - name: Upload Windows to Release
+      if: startsWith(github.ref, 'refs/tags/')
+      uses: softprops/action-gh-release@v2
       with:
-        name: ${{ env.APP_NAME }}-Windows-ZIP
-        path: ${{ env.APP_NAME }}-windows.zip
-        retention-days: 1
+        tag_name: ${{ needs.pre-check.outputs.tag }}
+        name: Release ${{ needs.pre-check.outputs.tag }}
+        generate_release_notes: true
+        files: |
+          ${{ env.APP_NAME }}-windows.zip
+        token: ${{ secrets.GITHUB_TOKEN }}
+        fail_on_unmatched_files: true
 
   build-android:
     name: Build Android Release APK
-    needs: pre-check
+    needs: [pre-check, build-windows]
     runs-on: ubuntu-latest
     timeout-minutes: 40
     steps:
@@ -313,44 +318,12 @@ jobs:
         echo "✅ APK renamed to: ${{ env.APP_NAME }}-android-$APK_VERSION-release.apk"
         ls -la *.apk
 
-    - name: Upload APK as Artifact
-      uses: actions/upload-artifact@v7
-      with:
-        name: ${{ env.APP_NAME }}-Android-Release-APK
-        path: ${{ env.APP_NAME }}-android-*.apk
-        retention-days: 1
-
-  create-release:
-    name: Create GitHub Release
-    needs: [pre-check, build-windows, build-android]
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    if: startsWith(github.ref, 'refs/tags/')
-    steps:
-    - name: Download Windows Artifact
-      uses: actions/download-artifact@v7
-      with:
-        name: ${{ env.APP_NAME }}-Windows-ZIP
-        path: ./release
-
-    - name: Download Android Artifact
-      uses: actions/download-artifact@v7
-      with:
-        name: ${{ env.APP_NAME }}-Android-Release-APK
-        path: ./release
-
-    - name: List release assets
-      run: |
-        echo "📦 Release assets:"
-        ls -la ./release/
-        echo ""
-        echo "Files to be uploaded:"
-        find ./release -type f
-
-    - name: Create GitHub Release
+    - name: Upload Android to Release
+      if: startsWith(github.ref, 'refs/tags/')
       uses: softprops/action-gh-release@v2
       with:
+        tag_name: ${{ needs.pre-check.outputs.tag }}
         files: |
-          ./release/*
-        generate_release_notes: true
+          ${{ env.APP_NAME }}-android-*.apk
         token: ${{ secrets.GITHUB_TOKEN }}
+        fail_on_unmatched_files: true
