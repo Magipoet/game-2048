@@ -314,61 +314,72 @@ class Game2048Logic extends ChangeNotifier {
   RowResult _processRowLeft(List<Cell> row, List<(int, int)> mergePositions,
       [int rowIdx = -1, int colIdx = -1]) {
     int scoreAdded = 0;
-    List<Cell> result = [];
+    List<Cell> result = List.filled(row.length, Cell.empty());
 
-    int i = 0;
-    while (i < row.length) {
+    List<List<Cell>> segments = [];
+    List<int> segmentStartIndices = [];
+    List<Cell> currentSegment = [];
+    int currentStart = 0;
+
+    for (int i = 0; i < row.length; i++) {
       final cell = row[i];
-
       if (cell.isWoodBlock || cell.isIceBlock) {
-        if (result.isNotEmpty && result.last.isEmpty) {
-          result.removeLast();
+        if (currentSegment.isNotEmpty) {
+          segments.add(currentSegment);
+          segmentStartIndices.add(currentStart);
+          currentSegment = [];
         }
-        result.add(cell);
-        i++;
-        continue;
-      }
-
-      if (cell.isEmpty) {
-        i++;
-        continue;
-      }
-
-      if (i + 1 < row.length) {
-        Cell nextCell = row[i + 1];
-        int nextIdx = i + 1;
-
-        while (nextIdx < row.length && nextCell.isEmpty) {
-          nextIdx++;
-          if (nextIdx < row.length) {
-            nextCell = row[nextIdx];
-          }
+        segments.add([cell]);
+        segmentStartIndices.add(i);
+        currentStart = i + 1;
+      } else {
+        if (currentSegment.isEmpty) {
+          currentStart = i;
         }
-
-        if (nextIdx < row.length &&
-            nextCell.isNumber &&
-            nextCell.value == cell.value) {
-          int mergedValue = cell.value * 2;
-          result.add(Cell.number(mergedValue));
-          scoreAdded += mergedValue;
-
-          if (rowIdx >= 0) {
-            mergePositions.add((rowIdx, result.length - 1));
-          } else {
-            mergePositions.add((result.length - 1, colIdx));
-          }
-
-          i = nextIdx + 1;
-          continue;
-        }
+        currentSegment.add(cell);
       }
-
-      result.add(cell);
-      i++;
+    }
+    if (currentSegment.isNotEmpty) {
+      segments.add(currentSegment);
+      segmentStartIndices.add(currentStart);
     }
 
-    while (result.length < GameBoard.size) {
-      result.add(Cell.empty());
+    for (int segIdx = 0; segIdx < segments.length; segIdx++) {
+      final segment = segments[segIdx];
+      final startIdx = segmentStartIndices[segIdx];
+
+      if (segment.length == 1 &&
+          (segment[0].isWoodBlock || segment[0].isIceBlock)) {
+        result[startIdx] = segment[0];
+        continue;
+      }
+
+      List<Cell> numbers = segment.where((c) => c.isNumber).toList();
+      List<Cell> processed = [];
+      int i = 0;
+      while (i < numbers.length) {
+        if (i + 1 < numbers.length &&
+            numbers[i].value == numbers[i + 1].value) {
+          int mergedValue = numbers[i].value * 2;
+          processed.add(Cell.number(mergedValue));
+          scoreAdded += mergedValue;
+
+          int mergePos = startIdx + processed.length - 1;
+          if (rowIdx >= 0) {
+            mergePositions.add((rowIdx, mergePos));
+          } else {
+            mergePositions.add((mergePos, colIdx));
+          }
+          i += 2;
+        } else {
+          processed.add(numbers[i]);
+          i++;
+        }
+      }
+
+      for (int j = 0; j < processed.length; j++) {
+        result[startIdx + j] = processed[j];
+      }
     }
 
     return RowResult(cells: result, scoreAdded: scoreAdded);
