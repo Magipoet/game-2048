@@ -1,7 +1,6 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
 import '../logic/game_2048_logic.dart';
 import '../models/game_mode.dart';

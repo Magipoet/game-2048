@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../../models/game_mode.dart';
 import '../../utils/game_colors.dart';
 
 class HighestScoresPanel extends StatelessWidget {

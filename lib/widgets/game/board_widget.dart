@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../../logic/game_2048_logic.dart';
 import '../../models/game_board.dart';
 import '../../utils/game_colors.dart';
 import 'tile_widget.dart';

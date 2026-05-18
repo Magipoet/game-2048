@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../../logic/game_2048_logic.dart';
 import '../../utils/game_colors.dart';
 
 class TileWidget extends StatelessWidget {
