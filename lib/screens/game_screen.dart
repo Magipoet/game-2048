@@ -343,6 +343,13 @@ class _GameScreenState extends State<GameScreen> {
 
         return Stack(
           children: [
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: isPortrait
+                  ? _buildPortraitLayout(boardSize)
+                  : _buildLandscapeLayout(boardSize),
+            ),
+
             Positioned(
               top: 16,
               right: 16,
@@ -352,13 +359,6 @@ class _GameScreenState extends State<GameScreen> {
                 onPressed: _showHelp,
                 tooltip: '游戏帮助',
               ),
-            ),
-
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: isPortrait
-                  ? _buildPortraitLayout(boardSize)
-                  : _buildLandscapeLayout(boardSize),
             ),
 
             if (_showHelpDialog) _buildHelpDialog(),
