@@ -162,14 +162,7 @@ jobs:
       with:
         name: ${{ env.APP_NAME }}-Windows-ZIP
         path: ${{ env.APP_NAME }}-windows.zip
-        retention-days: 90
-
-    - name: Upload Windows Directory as Artifact
-      uses: actions/upload-artifact@v7
-      with:
-        name: ${{ env.APP_NAME }}-Windows-Directory
-        path: ${{ env.APP_NAME }}-windows/
-        retention-days: 90
+        retention-days: 1
 
   build-android:
     name: Build Android Release APK
@@ -325,7 +318,7 @@ jobs:
       with:
         name: ${{ env.APP_NAME }}-Android-Release-APK
         path: ${{ env.APP_NAME }}-android-*.apk
-        retention-days: 90
+        retention-days: 1
 
   create-release:
     name: Create GitHub Release

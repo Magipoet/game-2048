@@ -129,7 +129,7 @@ class Game2048Logic extends ChangeNotifier {
     if (isValid) {
       startTimerIfNeeded();
       _score += scoreAdded;
-      _addRandomTile();
+      _addRandomTile(direction);
       _checkGameState();
     }
 
@@ -231,12 +231,41 @@ class Game2048Logic extends ChangeNotifier {
     );
   }
 
-  void _addRandomTile() {
+  void _addRandomTile([Direction? direction]) {
     List<(int, int)> emptyCells = _board.getEmptyCells();
     if (emptyCells.isEmpty) return;
 
     Random random = Random();
-    (int, int) position = emptyCells[random.nextInt(emptyCells.length)];
+    List<(int, int)> candidateCells = [];
+
+    if (direction != null) {
+      switch (direction) {
+        case Direction.left:
+          candidateCells = emptyCells.where((cell) => cell.$2 == 3).toList();
+          break;
+        case Direction.right:
+          candidateCells = emptyCells.where((cell) => cell.$2 == 0).toList();
+          break;
+        case Direction.up:
+          candidateCells = emptyCells.where((cell) => cell.$1 == 3).toList();
+          break;
+        case Direction.down:
+          candidateCells = emptyCells.where((cell) => cell.$1 == 0).toList();
+          break;
+      }
+    }
+
+    if (candidateCells.isEmpty) {
+      candidateCells = emptyCells.where((cell) {
+        return cell.$1 == 0 || cell.$1 == 3 || cell.$2 == 0 || cell.$2 == 3;
+      }).toList();
+    }
+
+    if (candidateCells.isEmpty) {
+      candidateCells = emptyCells;
+    }
+
+    (int, int) position = candidateCells[random.nextInt(candidateCells.length)];
     int value = random.nextDouble() < 0.9 ? 2 : 4;
 
     _board.setValue(position.$1, position.$2, value);
