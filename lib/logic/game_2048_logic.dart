@@ -470,7 +470,7 @@ class Game2048Logic extends ChangeNotifier {
               _iceBlockHadMerge = true;
             } else {
               newCell = Cell.number(mergedValue);
-              mergePosInSegment = current.$1;
+              mergePosInSegment = processed.length;
             }
 
             processed.add((mergePosInSegment, newCell));
