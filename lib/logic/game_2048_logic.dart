@@ -373,7 +373,29 @@ class Game2048Logic extends ChangeNotifier {
       final segment = segments[segIdx];
       final startIdx = segmentStartIndices[segIdx];
 
-      if (segment.length == 1 && segment[0].isWoodBlock) {
+      bool isIcePos = false;
+      int? iceIdxInSeg;
+      if (_iceBlockPosition != null) {
+        for (int i = 0; i < segment.length; i++) {
+          final originalIdx = startIdx + i;
+          bool posIsIce = false;
+          if (rowIdx >= 0) {
+            posIsIce = (rowIdx == _iceBlockPosition!.$1 &&
+                originalIdx == _iceBlockPosition!.$2);
+          } else {
+            posIsIce = (originalIdx == _iceBlockPosition!.$1 &&
+                colIdx == _iceBlockPosition!.$2);
+          }
+          if (posIsIce) {
+            isIcePos = true;
+            iceIdxInSeg = i;
+            break;
+          }
+        }
+      }
+
+      if (segment.length == 1 &&
+          (segment[0].isWoodBlock || segment[0].isFrozenNumber)) {
         result[startIdx] = segment[0];
         continue;
       }
@@ -393,7 +415,15 @@ class Game2048Logic extends ChangeNotifier {
 
         if (i + 1 < valuesWithIndices.length) {
           final next = valuesWithIndices[i + 1];
-          if (current.$2.value == next.$2.value) {
+
+          bool hasIceBetween = false;
+          if (iceIdxInSeg != null &&
+              current.$1 < iceIdxInSeg! &&
+              next.$1 > iceIdxInSeg!) {
+            hasIceBetween = true;
+          }
+
+          if (current.$2.value == next.$2.value && !hasIceBetween) {
             int mergedValue = current.$2.value * 2;
             bool currentIsFrozen = current.$2.isFrozenNumber;
             bool nextIsFrozen = next.$2.isFrozenNumber;
@@ -431,14 +461,17 @@ class Game2048Logic extends ChangeNotifier {
 
       List<int> frozenPositions = [];
       List<Cell> frozenCells = [];
-      List<Cell> movableCells = [];
+      List<Cell> leftMovableCells = [];
+      List<Cell> rightMovableCells = [];
 
       for (final item in processed) {
         if (item.$2.isFrozenNumber) {
           frozenPositions.add(item.$1);
           frozenCells.add(item.$2);
+        } else if (iceIdxInSeg != null && item.$1 < iceIdxInSeg!) {
+          leftMovableCells.add(item.$2);
         } else {
-          movableCells.add(item.$2);
+          rightMovableCells.add(item.$2);
         }
       }
 
@@ -448,11 +481,21 @@ class Game2048Logic extends ChangeNotifier {
         segResult[frozenPositions[j]] = frozenCells[j];
       }
 
-      int movableIdx = 0;
-      for (int j = 0; j < segment.length; j++) {
-        if (segResult[j].isEmpty && movableIdx < movableCells.length) {
+      int leftIdx = 0;
+      int leftEnd = iceIdxInSeg ?? segment.length;
+      for (int j = 0; j < leftEnd; j++) {
+        if (segResult[j].isEmpty && leftIdx < leftMovableCells.length) {
+          segResult[j] = leftMovableCells[leftIdx];
+          leftIdx++;
+        }
+      }
+
+      int rightIdx = 0;
+      int startFillIdx = iceIdxInSeg ?? 0;
+      for (int j = startFillIdx; j < segment.length; j++) {
+        if (segResult[j].isEmpty && rightIdx < rightMovableCells.length) {
           final originalIdx = startIdx + j;
-          final isIcePos = _iceBlockPosition != null &&
+          final posIsIce = _iceBlockPosition != null &&
               ((rowIdx >= 0 &&
                       rowIdx == _iceBlockPosition!.$1 &&
                       originalIdx == _iceBlockPosition!.$2) ||
@@ -460,15 +503,15 @@ class Game2048Logic extends ChangeNotifier {
                       originalIdx == _iceBlockPosition!.$1 &&
                       colIdx == _iceBlockPosition!.$2));
 
-          if (isIcePos) {
+          if (posIsIce) {
             segResult[j] = Cell.frozenNumber(
-              movableCells[movableIdx].value,
+              rightMovableCells[rightIdx].value,
               _iceBlockRemainingMoves,
             );
           } else {
-            segResult[j] = movableCells[movableIdx];
+            segResult[j] = rightMovableCells[rightIdx];
           }
-          movableIdx++;
+          rightIdx++;
         }
       }
 
