@@ -360,7 +360,7 @@ class Game2048Logic extends ChangeNotifier {
 
     for (int i = 0; i < row.length; i++) {
       final cell = row[i];
-      if (cell.isWoodBlock) {
+      if (cell.isWoodBlock || cell.isFrozenNumber) {
         if (currentSegment.isNotEmpty) {
           segments.add(currentSegment);
           segmentStartIndices.add(currentStart);
@@ -420,8 +420,6 @@ class Game2048Logic extends ChangeNotifier {
         if (i + 1 < valuesWithIndices.length) {
           final next = valuesWithIndices[i + 1];
 
-          bool currentIsFrozen = current.$2.isFrozenNumber;
-          bool nextIsFrozen = next.$2.isFrozenNumber;
           bool hasIceBetween = false;
           if (iceIdxInSeg != null &&
               current.$1 < iceIdxInSeg! &&
@@ -429,10 +427,11 @@ class Game2048Logic extends ChangeNotifier {
             hasIceBetween = true;
           }
 
-          if (!currentIsFrozen && !nextIsFrozen &&
-              current.$2.value == next.$2.value && !hasIceBetween) {
+          if (current.$2.value == next.$2.value && !hasIceBetween) {
             int mergedValue = current.$2.value * 2;
-            bool mergeAtIceBlock = false;
+            bool currentIsFrozen = current.$2.isFrozenNumber;
+            bool nextIsFrozen = next.$2.isFrozenNumber;
+            bool mergeAtIceBlock = currentIsFrozen || nextIsFrozen;
 
             Cell newCell;
             int mergePosInSegment;
@@ -520,11 +519,36 @@ class Game2048Logic extends ChangeNotifier {
       }
     }
 
+    for (int i = 0; i < row.length; i++) {
+      if (row[i].isFrozenNumber) {
+        if (i + 1 < row.length &&
+            result[i + 1].isNumber &&
+            row[i].value == result[i + 1].value) {
+          result[i] = Cell.number(row[i].value * 2);
+          result[i + 1] = Cell.empty();
+          scoreAdded += row[i].value * 2;
+
+          if (rowIdx >= 0) {
+            mergePositions.add((rowIdx, i));
+          } else {
+            mergePositions.add((i, colIdx));
+          }
+        }
+      }
+    }
+
     return RowResult(cells: result, scoreAdded: scoreAdded);
   }
 
   RowResult _processRowRight(List<Cell> row, List<(int, int)> mergePositions,
       int rowIdx, int colIdx, int? iceIdxInLine) {
+    List<int> icePositions = [];
+    for (int i = 0; i < row.length; i++) {
+      if (row[i].isFrozenNumber) {
+        icePositions.add(i);
+      }
+    }
+
     List<Cell> reversedRow = List.from(row.reversed);
     int mergePosBefore = mergePositions.length;
     RowResult result =
@@ -539,9 +563,28 @@ class Game2048Logic extends ChangeNotifier {
       }
     }
 
+    List<Cell> resultCells = List.from(result.cells.reversed);
+    int additionalScore = 0;
+
+    for (final icePos in icePositions) {
+      if (icePos > 0 &&
+          resultCells[icePos - 1].isNumber &&
+          row[icePos].value == resultCells[icePos - 1].value) {
+        resultCells[icePos] = Cell.number(row[icePos].value * 2);
+        resultCells[icePos - 1] = Cell.empty();
+        additionalScore += row[icePos].value * 2;
+
+        if (rowIdx >= 0) {
+          mergePositions.add((rowIdx, icePos));
+        } else {
+          mergePositions.add((icePos, colIdx));
+        }
+      }
+    }
+
     return RowResult(
-      cells: List.from(result.cells.reversed),
-      scoreAdded: result.scoreAdded,
+      cells: resultCells,
+      scoreAdded: result.scoreAdded + additionalScore,
     );
   }
 
