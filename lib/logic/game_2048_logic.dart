@@ -33,6 +33,7 @@ class Game2048Logic extends ChangeNotifier {
 
   (int, int)? _iceBlockPosition;
   int _iceBlockRemainingMoves = 0;
+  bool _iceBlockHadMerge = false;
 
   final Random _random = Random();
 
@@ -54,6 +55,7 @@ class Game2048Logic extends ChangeNotifier {
     _timerStarted = false;
     _iceBlockPosition = null;
     _iceBlockRemainingMoves = 0;
+    _iceBlockHadMerge = false;
     _addRandomTile();
     _addRandomTile();
 
@@ -196,6 +198,10 @@ class Game2048Logic extends ChangeNotifier {
     }
 
     _decrementIceBlock();
+    if (_iceBlockHadMerge) {
+      _iceBlockHadMerge = false;
+      _decrementIceBlock();
+    }
     _trySpawnWoodBlock();
     _trySpawnIceBlock();
   }
@@ -385,27 +391,30 @@ class Game2048Logic extends ChangeNotifier {
       while (i < valuesWithIndices.length) {
         final current = valuesWithIndices[i];
 
-        if (current.$2.isFrozenNumber) {
-          processed.add(current);
-          i++;
-          continue;
-        }
-
         if (i + 1 < valuesWithIndices.length) {
           final next = valuesWithIndices[i + 1];
           if (current.$2.value == next.$2.value) {
             int mergedValue = current.$2.value * 2;
+            bool currentIsFrozen = current.$2.isFrozenNumber;
+            bool nextIsFrozen = next.$2.isFrozenNumber;
+            bool mergeAtIceBlock = currentIsFrozen || nextIsFrozen;
+
             Cell newCell;
-            if (next.$2.isFrozenNumber) {
+            int mergePosInSegment;
+            if (mergeAtIceBlock) {
               newCell =
                   Cell.frozenNumber(mergedValue, _iceBlockRemainingMoves);
+              mergePosInSegment = currentIsFrozen ? current.$1 : next.$1;
+              _iceBlockHadMerge = true;
             } else {
               newCell = Cell.number(mergedValue);
+              mergePosInSegment = next.$1;
             }
-            processed.add((next.$1, newCell));
+
+            processed.add((mergePosInSegment, newCell));
             scoreAdded += mergedValue;
 
-            int mergePos = startIdx + next.$1;
+            int mergePos = startIdx + mergePosInSegment;
             if (rowIdx >= 0) {
               mergePositions.add((rowIdx, mergePos));
             } else {
