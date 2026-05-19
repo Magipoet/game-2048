@@ -352,14 +352,42 @@ class Game2048Logic extends ChangeNotifier {
       int rowIdx, int colIdx, int? iceIdxInLine) {
     int scoreAdded = 0;
     List<Cell> result = List.filled(row.length, Cell.empty());
+    List<Cell> workingRow = List.from(row);
+
+    for (int i = 0; i < workingRow.length; i++) {
+      if (workingRow[i].isFrozenNumber && i + 1 < workingRow.length) {
+        final rightCell = workingRow[i + 1];
+        if (rightCell.isNumber &&
+            !rightCell.isFrozenNumber &&
+            workingRow[i].value == rightCell.value) {
+          int mergedValue = workingRow[i].value * 2;
+          int remainingMoves = workingRow[i].remainingMoves ?? 0;
+          remainingMoves = max(0, remainingMoves - 1);
+          if (remainingMoves > 0) {
+            workingRow[i] = Cell.frozenNumber(mergedValue, remainingMoves);
+          } else {
+            workingRow[i] = Cell.number(mergedValue);
+          }
+          workingRow[i + 1] = Cell.empty();
+          scoreAdded += mergedValue;
+          _iceBlockHadMerge = true;
+
+          if (rowIdx >= 0) {
+            mergePositions.add((rowIdx, i));
+          } else {
+            mergePositions.add((i, colIdx));
+          }
+        }
+      }
+    }
 
     List<List<Cell>> segments = [];
     List<int> segmentStartIndices = [];
     List<Cell> currentSegment = [];
     int currentStart = 0;
 
-    for (int i = 0; i < row.length; i++) {
-      final cell = row[i];
+    for (int i = 0; i < workingRow.length; i++) {
+      final cell = workingRow[i];
       if (cell.isWoodBlock || cell.isFrozenNumber) {
         if (currentSegment.isNotEmpty) {
           segments.add(currentSegment);
@@ -519,14 +547,31 @@ class Game2048Logic extends ChangeNotifier {
       }
     }
 
-    for (int i = 0; i < row.length; i++) {
-      if (row[i].isFrozenNumber) {
-        if (i + 1 < row.length &&
-            result[i + 1].isNumber &&
-            row[i].value == result[i + 1].value) {
-          result[i] = Cell.number(row[i].value * 2);
-          result[i + 1] = Cell.empty();
-          scoreAdded += row[i].value * 2;
+    return RowResult(cells: result, scoreAdded: scoreAdded);
+  }
+
+  RowResult _processRowRight(List<Cell> row, List<(int, int)> mergePositions,
+      int rowIdx, int colIdx, int? iceIdxInLine) {
+    List<Cell> workingRow = List.from(row);
+    int additionalScore = 0;
+
+    for (int i = workingRow.length - 1; i >= 0; i--) {
+      if (workingRow[i].isFrozenNumber && i > 0) {
+        final leftCell = workingRow[i - 1];
+        if (leftCell.isNumber &&
+            !leftCell.isFrozenNumber &&
+            workingRow[i].value == leftCell.value) {
+          int mergedValue = workingRow[i].value * 2;
+          int remainingMoves = workingRow[i].remainingMoves ?? 0;
+          remainingMoves = max(0, remainingMoves - 1);
+          if (remainingMoves > 0) {
+            workingRow[i] = Cell.frozenNumber(mergedValue, remainingMoves);
+          } else {
+            workingRow[i] = Cell.number(mergedValue);
+          }
+          workingRow[i - 1] = Cell.empty();
+          additionalScore += mergedValue;
+          _iceBlockHadMerge = true;
 
           if (rowIdx >= 0) {
             mergePositions.add((rowIdx, i));
@@ -537,19 +582,7 @@ class Game2048Logic extends ChangeNotifier {
       }
     }
 
-    return RowResult(cells: result, scoreAdded: scoreAdded);
-  }
-
-  RowResult _processRowRight(List<Cell> row, List<(int, int)> mergePositions,
-      int rowIdx, int colIdx, int? iceIdxInLine) {
-    List<int> icePositions = [];
-    for (int i = 0; i < row.length; i++) {
-      if (row[i].isFrozenNumber) {
-        icePositions.add(i);
-      }
-    }
-
-    List<Cell> reversedRow = List.from(row.reversed);
+    List<Cell> reversedRow = List.from(workingRow.reversed);
     int mergePosBefore = mergePositions.length;
     RowResult result =
         _processRowLeft(reversedRow, mergePositions, rowIdx, colIdx, iceIdxInLine);
@@ -564,23 +597,6 @@ class Game2048Logic extends ChangeNotifier {
     }
 
     List<Cell> resultCells = List.from(result.cells.reversed);
-    int additionalScore = 0;
-
-    for (final icePos in icePositions) {
-      if (icePos > 0 &&
-          resultCells[icePos - 1].isNumber &&
-          row[icePos].value == resultCells[icePos - 1].value) {
-        resultCells[icePos] = Cell.number(row[icePos].value * 2);
-        resultCells[icePos - 1] = Cell.empty();
-        additionalScore += row[icePos].value * 2;
-
-        if (rowIdx >= 0) {
-          mergePositions.add((rowIdx, icePos));
-        } else {
-          mergePositions.add((icePos, colIdx));
-        }
-      }
-    }
 
     return RowResult(
       cells: resultCells,
