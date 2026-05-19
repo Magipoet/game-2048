@@ -44,18 +44,6 @@ class GameBoard {
     return emptyCells;
   }
 
-  List<(int, int)> getEmptyOrNumberCells() {
-    List<(int, int)> cells = [];
-    for (int i = 0; i < size; i++) {
-      for (int j = 0; j < size; j++) {
-        if (_board[i][j].isEmpty || _board[i][j].isNumber) {
-          cells.add((i, j));
-        }
-      }
-    }
-    return cells;
-  }
-
   bool hasWoodBlock() {
     for (int i = 0; i < size; i++) {
       for (int j = 0; j < size; j++) {

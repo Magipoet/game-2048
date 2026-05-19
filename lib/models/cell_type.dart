@@ -2,7 +2,7 @@ enum CellType {
   empty,
   number,
   woodBlock,
-  iceBlock,
+  frozenNumber,
 }
 
 class Cell {
@@ -25,9 +25,8 @@ class Cell {
   factory Cell.woodBlock(int remainingMerges) =>
       Cell._(type: CellType.woodBlock, remainingMerges: remainingMerges);
 
-  factory Cell.iceBlock({required int value, required int remainingMoves}) =>
-      Cell._(
-        type: CellType.iceBlock,
+  factory Cell.frozenNumber(int value, int remainingMoves) => Cell._(
+        type: CellType.frozenNumber,
         value: value,
         remainingMoves: remainingMoves,
       );
@@ -35,9 +34,10 @@ class Cell {
   bool get isEmpty => type == CellType.empty;
   bool get isNumber => type == CellType.number;
   bool get isWoodBlock => type == CellType.woodBlock;
-  bool get isIceBlock => type == CellType.iceBlock;
+  bool get isFrozenNumber => type == CellType.frozenNumber;
+  bool get hasValue => isNumber || isFrozenNumber;
   bool get isMovable => isNumber;
-  bool get blocksMovement => isWoodBlock || isIceBlock;
+  bool get blocksMovement => isWoodBlock;
 
   Cell copyWith({
     CellType? type,

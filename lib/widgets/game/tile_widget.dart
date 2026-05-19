@@ -105,8 +105,8 @@ class _AnimatedTileState extends State<AnimatedTile>
 
     final displayValue = widget.cell.isWoodBlock
         ? '木${widget.cell.remainingMerges}'
-        : widget.cell.isIceBlock
-            ? '${widget.cell.value}\n❄${widget.cell.remainingMoves}'
+        : widget.cell.isFrozenNumber
+            ? '${widget.cell.value}'
             : '${widget.cell.value}';
 
     return ScaleTransition(
@@ -120,7 +120,7 @@ class _AnimatedTileState extends State<AnimatedTile>
               cellType: widget.cell.type,
             ),
             borderRadius: BorderRadius.circular(8),
-            border: widget.cell.isIceBlock
+            border: widget.cell.isFrozenNumber
                 ? Border.all(color: Colors.white, width: 2)
                 : null,
           ),
@@ -138,7 +138,7 @@ class _AnimatedTileState extends State<AnimatedTile>
                   widget.cell.value,
                   cellType: widget.cell.type,
                 ),
-                height: widget.cell.isIceBlock ? 1.2 : 1.0,
+                height: 1.0,
               ),
             ),
           ),

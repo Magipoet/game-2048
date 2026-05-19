@@ -31,6 +31,9 @@ class Game2048Logic extends ChangeNotifier {
   static const int _woodBlockRequiredMerges = 4;
   static const int _iceBlockMaxMoves = 4;
 
+  (int, int)? _iceBlockPosition;
+  int _iceBlockRemainingMoves = 0;
+
   final Random _random = Random();
 
   Game2048Logic()
@@ -49,6 +52,8 @@ class Game2048Logic extends ChangeNotifier {
     _continueAfterWin = false;
     _elapsedSeconds = 0;
     _timerStarted = false;
+    _iceBlockPosition = null;
+    _iceBlockRemainingMoves = 0;
     _addRandomTile();
     _addRandomTile();
 
@@ -190,34 +195,30 @@ class Game2048Logic extends ChangeNotifier {
       }
     }
 
-    _decrementIceBlocks(mergePositions);
+    _decrementIceBlock();
     _trySpawnWoodBlock();
     _trySpawnIceBlock();
   }
 
-  void _decrementIceBlocks(List<(int, int)> mergePositions) {
-    List<(int, int, Cell)> cellsToUpdate = [];
+  void _decrementIceBlock() {
+    if (_iceBlockPosition == null) return;
 
+    _iceBlockRemainingMoves--;
+    if (_iceBlockRemainingMoves <= 0) {
+      _unfreezeAllNumbers();
+      _iceBlockPosition = null;
+      _iceBlockRemainingMoves = 0;
+    }
+  }
+
+  void _unfreezeAllNumbers() {
     for (int i = 0; i < GameBoard.size; i++) {
       for (int j = 0; j < GameBoard.size; j++) {
         final cell = _board.getCell(i, j);
-        if (cell.isIceBlock) {
-          int newRemaining = (cell.remainingMoves ?? 0) - 1;
-          if (mergePositions.contains((i, j))) {
-            newRemaining -= 1;
-          }
-          if (newRemaining <= 0) {
-            cellsToUpdate.add((i, j, Cell.number(cell.value)));
-          } else {
-            cellsToUpdate.add(
-                (i, j, cell.copyWith(remainingMoves: newRemaining)));
-          }
+        if (cell.isFrozenNumber) {
+          _board.setCell(i, j, Cell.number(cell.value));
         }
       }
-    }
-
-    for (final update in cellsToUpdate) {
-      _board.setCell(update.$1, update.$2, update.$3);
     }
   }
 
@@ -235,14 +236,32 @@ class Game2048Logic extends ChangeNotifier {
   }
 
   void _trySpawnIceBlock() {
-    final emptyCells = _board.getEmptyCells();
-    if (emptyCells.isEmpty) return;
+    if (_iceBlockPosition != null) return;
+    if (_random.nextDouble() >= 0.1) return;
 
-    if (_random.nextDouble() < 0.1) {
-      final pos = emptyCells[_random.nextInt(emptyCells.length)];
-      int value = _random.nextDouble() < 0.9 ? 2 : 4;
-      _board.setCell(pos.$1, pos.$2,
-          Cell.iceBlock(value: value, remainingMoves: _iceBlockMaxMoves));
+    List<(int, int)> candidates = [];
+    for (int i = 0; i < GameBoard.size; i++) {
+      for (int j = 0; j < GameBoard.size; j++) {
+        final cell = _board.getCell(i, j);
+        if (!cell.isWoodBlock && !cell.isFrozenNumber) {
+          candidates.add((i, j));
+        }
+      }
+    }
+
+    if (candidates.isEmpty) return;
+
+    final pos = candidates[_random.nextInt(candidates.length)];
+    _iceBlockPosition = pos;
+    _iceBlockRemainingMoves = _iceBlockMaxMoves;
+
+    final cell = _board.getCell(pos.$1, pos.$2);
+    if (cell.isNumber) {
+      _board.setCell(
+        pos.$1,
+        pos.$2,
+        Cell.frozenNumber(cell.value, _iceBlockRemainingMoves),
+      );
     }
   }
 
@@ -323,7 +342,7 @@ class Game2048Logic extends ChangeNotifier {
 
     for (int i = 0; i < row.length; i++) {
       final cell = row[i];
-      if (cell.isWoodBlock || cell.isIceBlock) {
+      if (cell.isWoodBlock) {
         if (currentSegment.isNotEmpty) {
           segments.add(currentSegment);
           segmentStartIndices.add(currentStart);
@@ -348,37 +367,104 @@ class Game2048Logic extends ChangeNotifier {
       final segment = segments[segIdx];
       final startIdx = segmentStartIndices[segIdx];
 
-      if (segment.length == 1 &&
-          (segment[0].isWoodBlock || segment[0].isIceBlock)) {
+      if (segment.length == 1 && segment[0].isWoodBlock) {
         result[startIdx] = segment[0];
         continue;
       }
 
-      List<Cell> numbers = segment.where((c) => c.isNumber).toList();
-      List<Cell> processed = [];
-      int i = 0;
-      while (i < numbers.length) {
-        if (i + 1 < numbers.length &&
-            numbers[i].value == numbers[i + 1].value) {
-          int mergedValue = numbers[i].value * 2;
-          processed.add(Cell.number(mergedValue));
-          scoreAdded += mergedValue;
-
-          int mergePos = startIdx + processed.length - 1;
-          if (rowIdx >= 0) {
-            mergePositions.add((rowIdx, mergePos));
-          } else {
-            mergePositions.add((mergePos, colIdx));
-          }
-          i += 2;
-        } else {
-          processed.add(numbers[i]);
-          i++;
+      List<(int, Cell)> valuesWithIndices = [];
+      for (int i = 0; i < segment.length; i++) {
+        final cell = segment[i];
+        if (cell.hasValue) {
+          valuesWithIndices.add((i, cell));
         }
       }
 
-      for (int j = 0; j < processed.length; j++) {
-        result[startIdx + j] = processed[j];
+      List<(int, Cell)> processed = [];
+      int i = 0;
+      while (i < valuesWithIndices.length) {
+        final current = valuesWithIndices[i];
+
+        if (current.$2.isFrozenNumber) {
+          processed.add(current);
+          i++;
+          continue;
+        }
+
+        if (i + 1 < valuesWithIndices.length) {
+          final next = valuesWithIndices[i + 1];
+          if (current.$2.value == next.$2.value) {
+            int mergedValue = current.$2.value * 2;
+            Cell newCell;
+            if (next.$2.isFrozenNumber) {
+              newCell =
+                  Cell.frozenNumber(mergedValue, _iceBlockRemainingMoves);
+            } else {
+              newCell = Cell.number(mergedValue);
+            }
+            processed.add((next.$1, newCell));
+            scoreAdded += mergedValue;
+
+            int mergePos = startIdx + next.$1;
+            if (rowIdx >= 0) {
+              mergePositions.add((rowIdx, mergePos));
+            } else {
+              mergePositions.add((mergePos, colIdx));
+            }
+            i += 2;
+            continue;
+          }
+        }
+
+        processed.add(current);
+        i++;
+      }
+
+      List<int> frozenPositions = [];
+      List<Cell> frozenCells = [];
+      List<Cell> movableCells = [];
+
+      for (final item in processed) {
+        if (item.$2.isFrozenNumber) {
+          frozenPositions.add(item.$1);
+          frozenCells.add(item.$2);
+        } else {
+          movableCells.add(item.$2);
+        }
+      }
+
+      List<Cell> segResult = List.filled(segment.length, Cell.empty());
+
+      for (int j = 0; j < frozenPositions.length; j++) {
+        segResult[frozenPositions[j]] = frozenCells[j];
+      }
+
+      int movableIdx = 0;
+      for (int j = 0; j < segment.length; j++) {
+        if (segResult[j].isEmpty && movableIdx < movableCells.length) {
+          final originalIdx = startIdx + j;
+          final isIcePos = _iceBlockPosition != null &&
+              ((rowIdx >= 0 &&
+                      rowIdx == _iceBlockPosition!.$1 &&
+                      originalIdx == _iceBlockPosition!.$2) ||
+                  (rowIdx < 0 &&
+                      originalIdx == _iceBlockPosition!.$1 &&
+                      colIdx == _iceBlockPosition!.$2));
+
+          if (isIcePos) {
+            segResult[j] = Cell.frozenNumber(
+              movableCells[movableIdx].value,
+              _iceBlockRemainingMoves,
+            );
+          } else {
+            segResult[j] = movableCells[movableIdx];
+          }
+          movableIdx++;
+        }
+      }
+
+      for (int j = 0; j < segment.length; j++) {
+        result[startIdx + j] = segResult[j];
       }
     }
 
@@ -388,7 +474,8 @@ class Game2048Logic extends ChangeNotifier {
   RowResult _processRowRight(List<Cell> row, List<(int, int)> mergePositions,
       [int rowIdx = -1, int colIdx = -1]) {
     List<Cell> reversedRow = List.from(row.reversed);
-    RowResult result = _processRowLeft(reversedRow, mergePositions, rowIdx, colIdx);
+    RowResult result =
+        _processRowLeft(reversedRow, mergePositions, rowIdx, colIdx);
     return RowResult(
       cells: List.from(result.cells.reversed),
       scoreAdded: result.scoreAdded,
@@ -432,7 +519,19 @@ class Game2048Logic extends ChangeNotifier {
     (int, int) position = candidateCells[random.nextInt(candidateCells.length)];
     int value = random.nextDouble() < 0.9 ? 2 : 4;
 
-    _board.setValue(position.$1, position.$2, value);
+    final isIcePos = _iceBlockPosition != null &&
+        position.$1 == _iceBlockPosition!.$1 &&
+        position.$2 == _iceBlockPosition!.$2;
+
+    if (isIcePos) {
+      _board.setCell(
+        position.$1,
+        position.$2,
+        Cell.frozenNumber(value, _iceBlockRemainingMoves),
+      );
+    } else {
+      _board.setValue(position.$1, position.$2, value);
+    }
   }
 
   void _checkGameState() {
@@ -464,9 +563,7 @@ class Game2048Logic extends ChangeNotifier {
       for (int j = 0; j < GameBoard.size - 1; j++) {
         final cell1 = _board.getCell(i, j);
         final cell2 = _board.getCell(i, j + 1);
-        if (cell1.isNumber &&
-            cell2.isNumber &&
-            cell1.value == cell2.value) {
+        if (cell1.hasValue && cell2.hasValue && cell1.value == cell2.value) {
           return false;
         }
       }
@@ -476,9 +573,7 @@ class Game2048Logic extends ChangeNotifier {
       for (int j = 0; j < GameBoard.size; j++) {
         final cell1 = _board.getCell(i, j);
         final cell2 = _board.getCell(i + 1, j);
-        if (cell1.isNumber &&
-            cell2.isNumber &&
-            cell1.value == cell2.value) {
+        if (cell1.hasValue && cell2.hasValue && cell1.value == cell2.value) {
           return false;
         }
       }
@@ -519,6 +614,9 @@ class Game2048Logic extends ChangeNotifier {
     }
     return _elapsedSeconds;
   }
+
+  (int, int)? get iceBlockPosition => _iceBlockPosition;
+  int get iceBlockRemainingMoves => _iceBlockRemainingMoves;
 
   int get maxTile {
     int maxValue = 0;

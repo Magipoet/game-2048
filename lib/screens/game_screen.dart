@@ -447,6 +447,8 @@ class _GameScreenState extends State<GameScreen> {
             child: BoardWidget(
               board: _gameLogic.board,
               size: boardSize,
+              iceBlockPosition: _gameLogic.iceBlockPosition,
+              iceBlockRemainingMoves: _gameLogic.iceBlockRemainingMoves,
             ),
           ),
         ),
@@ -479,6 +481,8 @@ class _GameScreenState extends State<GameScreen> {
                 child: BoardWidget(
                   board: _gameLogic.board,
                   size: boardSize,
+                  iceBlockPosition: _gameLogic.iceBlockPosition,
+                  iceBlockRemainingMoves: _gameLogic.iceBlockRemainingMoves,
                 ),
               ),
             ],
@@ -596,13 +600,14 @@ class _GameScreenState extends State<GameScreen> {
                   const Text('    - 显示剩余需要合并的次数'),
                   const SizedBox(height: 4),
                   const Text(
-                    '  ❄️ 冰块：',
+                    '  ❄️ 冰块区域：',
                     style: TextStyle(fontWeight: FontWeight.bold),
                   ),
-                  const Text('    - 内部包含数字，数字无法移动'),
-                  const Text('    - 最多存在 4 次滑动'),
-                  const Text('    - 内部数字合并时额外减少 1 次'),
-                  const Text('    - 显示剩余滑动次数'),
+                  const Text('    - 棋盘上有蓝色边框标记的冻结区域'),
+                  const Text('    - 数字滑入该区域后被冻结，无法再移动'),
+                  const Text('    - 冻结的数字可以参与合并'),
+                  const Text('    - 冰块区域最多存在 4 次滑动后消失'),
+                  const Text('    - 右上角显示剩余滑动次数'),
                   const SizedBox(height: 16),
                   const Text(
                     '游戏结束',
