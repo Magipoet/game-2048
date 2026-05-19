@@ -60,8 +60,8 @@ class BoardWidget extends StatelessWidget {
     final row = iceBlockPosition!.$1;
     final col = iceBlockPosition!.$2;
 
-    final double top = padding + row * (tileSize + spacing);
-    final double left = padding + col * (tileSize + spacing);
+    final double top = row * (tileSize + spacing);
+    final double left = col * (tileSize + spacing);
 
     return Positioned(
       top: top,
