@@ -525,8 +525,19 @@ class Game2048Logic extends ChangeNotifier {
   RowResult _processRowRight(List<Cell> row, List<(int, int)> mergePositions,
       int rowIdx, int colIdx, int? iceIdxInLine) {
     List<Cell> reversedRow = List.from(row.reversed);
+    int mergePosBefore = mergePositions.length;
     RowResult result =
         _processRowLeft(reversedRow, mergePositions, rowIdx, colIdx, iceIdxInLine);
+
+    for (int i = mergePosBefore; i < mergePositions.length; i++) {
+      final pos = mergePositions[i];
+      if (rowIdx >= 0) {
+        mergePositions[i] = (pos.$1, GameBoard.size - 1 - pos.$2);
+      } else {
+        mergePositions[i] = (GameBoard.size - 1 - pos.$1, pos.$2);
+      }
+    }
+
     return RowResult(
       cells: List.from(result.cells.reversed),
       scoreAdded: result.scoreAdded,
