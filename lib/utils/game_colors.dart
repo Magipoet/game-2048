@@ -5,7 +5,7 @@ import '../models/cell_type.dart';
 class GameColors {
   static const Color backgroundColor = Color(0xFFFAF8EF);
   static const Color boardBackground = Color(0xFFBBADA0);
-  static const Color emptyTile = Color(0xFFB8A89A);
+  static const Color emptyTile = Color(0xFF4A4036);
   static const Color scoreBackground = Color(0xFFBBADA0);
   static const Color buttonBackground = Color(0xFF8F7A66);
   static const Color textColor = Color(0xFF776E65);
