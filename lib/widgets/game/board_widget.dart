@@ -53,9 +53,9 @@ class BoardWidget extends StatelessWidget {
   }
 
   Widget _buildIceBlockOverlay() {
-    final double tileSize = (size - 20 - 30) / 4;
     final double spacing = 10;
     final double padding = 10;
+    final double tileSize = (size - padding * 2 - spacing * 3) / 4;
 
     final row = iceBlockPosition!.$1;
     final col = iceBlockPosition!.$2;
