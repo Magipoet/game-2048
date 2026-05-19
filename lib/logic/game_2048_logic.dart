@@ -285,7 +285,10 @@ class Game2048Logic extends ChangeNotifier {
     for (int row = 0; row < GameBoard.size; row++) {
       List<Cell> rowData =
           List.generate(GameBoard.size, (col) => _board.getCell(row, col));
-      RowResult result = _processRowLeft(rowData, mergePositions, row);
+      int? iceIdx = _iceBlockPosition != null && row == _iceBlockPosition!.$1
+          ? _iceBlockPosition!.$2
+          : null;
+      RowResult result = _processRowLeft(rowData, mergePositions, row, -1, iceIdx);
       scoreAdded += result.scoreAdded;
       for (int col = 0; col < GameBoard.size; col++) {
         _board.setCell(row, col, result.cells[col]);
@@ -299,7 +302,10 @@ class Game2048Logic extends ChangeNotifier {
     for (int row = 0; row < GameBoard.size; row++) {
       List<Cell> rowData =
           List.generate(GameBoard.size, (col) => _board.getCell(row, col));
-      RowResult result = _processRowRight(rowData, mergePositions, row);
+      int? iceIdx = _iceBlockPosition != null && row == _iceBlockPosition!.$1
+          ? (GameBoard.size - 1 - _iceBlockPosition!.$2)
+          : null;
+      RowResult result = _processRowRight(rowData, mergePositions, row, -1, iceIdx);
       scoreAdded += result.scoreAdded;
       for (int col = 0; col < GameBoard.size; col++) {
         _board.setCell(row, col, result.cells[col]);
@@ -313,7 +319,10 @@ class Game2048Logic extends ChangeNotifier {
     for (int col = 0; col < GameBoard.size; col++) {
       List<Cell> colData =
           List.generate(GameBoard.size, (row) => _board.getCell(row, col));
-      RowResult result = _processRowLeft(colData, mergePositions, -1, col);
+      int? iceIdx = _iceBlockPosition != null && col == _iceBlockPosition!.$2
+          ? _iceBlockPosition!.$1
+          : null;
+      RowResult result = _processRowLeft(colData, mergePositions, -1, col, iceIdx);
       scoreAdded += result.scoreAdded;
       for (int row = 0; row < GameBoard.size; row++) {
         _board.setCell(row, col, result.cells[row]);
@@ -327,7 +336,10 @@ class Game2048Logic extends ChangeNotifier {
     for (int col = 0; col < GameBoard.size; col++) {
       List<Cell> colData =
           List.generate(GameBoard.size, (row) => _board.getCell(row, col));
-      RowResult result = _processRowRight(colData, mergePositions, -1, col);
+      int? iceIdx = _iceBlockPosition != null && col == _iceBlockPosition!.$2
+          ? (GameBoard.size - 1 - _iceBlockPosition!.$1)
+          : null;
+      RowResult result = _processRowRight(colData, mergePositions, -1, col, iceIdx);
       scoreAdded += result.scoreAdded;
       for (int row = 0; row < GameBoard.size; row++) {
         _board.setCell(row, col, result.cells[row]);
@@ -337,7 +349,7 @@ class Game2048Logic extends ChangeNotifier {
   }
 
   RowResult _processRowLeft(List<Cell> row, List<(int, int)> mergePositions,
-      [int rowIdx = -1, int colIdx = -1]) {
+      int rowIdx, int colIdx, int? iceIdxInLine) {
     int scoreAdded = 0;
     List<Cell> result = List.filled(row.length, Cell.empty());
 
@@ -375,18 +387,10 @@ class Game2048Logic extends ChangeNotifier {
 
       bool isIcePos = false;
       int? iceIdxInSeg;
-      if (_iceBlockPosition != null) {
+      if (iceIdxInLine != null) {
         for (int i = 0; i < segment.length; i++) {
           final originalIdx = startIdx + i;
-          bool posIsIce = false;
-          if (rowIdx >= 0) {
-            posIsIce = (rowIdx == _iceBlockPosition!.$1 &&
-                originalIdx == _iceBlockPosition!.$2);
-          } else {
-            posIsIce = (originalIdx == _iceBlockPosition!.$1 &&
-                colIdx == _iceBlockPosition!.$2);
-          }
-          if (posIsIce) {
+          if (originalIdx == iceIdxInLine) {
             isIcePos = true;
             iceIdxInSeg = i;
             break;
@@ -438,7 +442,7 @@ class Game2048Logic extends ChangeNotifier {
               _iceBlockHadMerge = true;
             } else {
               newCell = Cell.number(mergedValue);
-              mergePosInSegment = next.$1;
+              mergePosInSegment = current.$1;
             }
 
             processed.add((mergePosInSegment, newCell));
@@ -495,13 +499,8 @@ class Game2048Logic extends ChangeNotifier {
       for (int j = startFillIdx; j < segment.length; j++) {
         if (segResult[j].isEmpty && rightIdx < rightMovableCells.length) {
           final originalIdx = startIdx + j;
-          final posIsIce = _iceBlockPosition != null &&
-              ((rowIdx >= 0 &&
-                      rowIdx == _iceBlockPosition!.$1 &&
-                      originalIdx == _iceBlockPosition!.$2) ||
-                  (rowIdx < 0 &&
-                      originalIdx == _iceBlockPosition!.$1 &&
-                      colIdx == _iceBlockPosition!.$2));
+          final posIsIce =
+              iceIdxInLine != null && originalIdx == iceIdxInLine;
 
           if (posIsIce) {
             segResult[j] = Cell.frozenNumber(
@@ -524,10 +523,10 @@ class Game2048Logic extends ChangeNotifier {
   }
 
   RowResult _processRowRight(List<Cell> row, List<(int, int)> mergePositions,
-      [int rowIdx = -1, int colIdx = -1]) {
+      int rowIdx, int colIdx, int? iceIdxInLine) {
     List<Cell> reversedRow = List.from(row.reversed);
     RowResult result =
-        _processRowLeft(reversedRow, mergePositions, rowIdx, colIdx);
+        _processRowLeft(reversedRow, mergePositions, rowIdx, colIdx, iceIdxInLine);
     return RowResult(
       cells: List.from(result.cells.reversed),
       scoreAdded: result.scoreAdded,
