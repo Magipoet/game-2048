@@ -28,8 +28,8 @@ class Game2048Logic extends ChangeNotifier {
   int _elapsedSeconds = 0;
   Timer? _gameTimer;
   static const int _timedModeDuration = 10 * 60;
-  static const int _woodBlockRequiredMerges = 4;
-  static const int _iceBlockMaxMoves = 4;
+  static const int _woodBlockRequiredMerges = 3;
+  static const int _iceBlockMaxMoves = 8;
 
   (int, int)? _iceBlockPosition;
   int _iceBlockRemainingMoves = 0;
