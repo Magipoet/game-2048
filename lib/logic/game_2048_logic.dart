@@ -420,6 +420,8 @@ class Game2048Logic extends ChangeNotifier {
         if (i + 1 < valuesWithIndices.length) {
           final next = valuesWithIndices[i + 1];
 
+          bool currentIsFrozen = current.$2.isFrozenNumber;
+          bool nextIsFrozen = next.$2.isFrozenNumber;
           bool hasIceBetween = false;
           if (iceIdxInSeg != null &&
               current.$1 < iceIdxInSeg! &&
@@ -427,11 +429,10 @@ class Game2048Logic extends ChangeNotifier {
             hasIceBetween = true;
           }
 
-          if (current.$2.value == next.$2.value && !hasIceBetween) {
+          if (!currentIsFrozen && !nextIsFrozen &&
+              current.$2.value == next.$2.value && !hasIceBetween) {
             int mergedValue = current.$2.value * 2;
-            bool currentIsFrozen = current.$2.isFrozenNumber;
-            bool nextIsFrozen = next.$2.isFrozenNumber;
-            bool mergeAtIceBlock = currentIsFrozen || nextIsFrozen;
+            bool mergeAtIceBlock = false;
 
             Cell newCell;
             int mergePosInSegment;
