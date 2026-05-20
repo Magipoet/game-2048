@@ -511,13 +511,6 @@ class _GameScreenState extends State<GameScreen> {
                   color: GameColors.textColor,
                 ),
               ),
-              const SizedBox(width: 8),
-              IconButton(
-                icon: const Icon(Icons.undo, size: 22),
-                color: GameColors.textColor,
-                onPressed: _undoToInitial,
-                tooltip: '撤销上一步',
-              ),
               const Spacer(),
               IconButton(
                 icon: const Icon(Icons.help_outline, size: 24),
@@ -584,11 +577,28 @@ class _GameScreenState extends State<GameScreen> {
         SizedBox(
           height: boardSize + 32,
           child: Center(
-            child: BoardWidget(
-              board: _gameLogic.board,
-              size: boardSize,
-              iceBlockPosition: _gameLogic.iceBlockPosition,
-              iceBlockRemainingMoves: _gameLogic.iceBlockRemainingMoves,
+            child: Stack(
+              clipBehavior: Clip.none,
+              children: [
+                BoardWidget(
+                  board: _gameLogic.board,
+                  size: boardSize,
+                  iceBlockPosition: _gameLogic.iceBlockPosition,
+                  iceBlockRemainingMoves: _gameLogic.iceBlockRemainingMoves,
+                ),
+                Positioned(
+                  left: boardSize * 3 / 4 - 14,
+                  top: -36,
+                  child: IconButton(
+                    icon: const Icon(Icons.undo, size: 24),
+                    color: GameColors.textColor,
+                    onPressed: _undoToInitial,
+                    tooltip: '撤销上一步',
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                  ),
+                ),
+              ],
             ),
           ),
         ),
@@ -618,13 +628,6 @@ class _GameScreenState extends State<GameScreen> {
                         color: GameColors.textColor,
                       ),
                     ),
-                    const SizedBox(width: 8),
-                    IconButton(
-                      icon: const Icon(Icons.undo, size: 28),
-                      color: GameColors.textColor,
-                      onPressed: _undoToInitial,
-                      tooltip: '撤销上一步',
-                    ),
                     const Spacer(),
                     IconButton(
                       icon: const Icon(Icons.help_outline, size: 28),
@@ -636,11 +639,28 @@ class _GameScreenState extends State<GameScreen> {
                 ),
               ),
               Center(
-                child: BoardWidget(
-                  board: _gameLogic.board,
-                  size: boardSize,
-                  iceBlockPosition: _gameLogic.iceBlockPosition,
-                  iceBlockRemainingMoves: _gameLogic.iceBlockRemainingMoves,
+                child: Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    BoardWidget(
+                      board: _gameLogic.board,
+                      size: boardSize,
+                      iceBlockPosition: _gameLogic.iceBlockPosition,
+                      iceBlockRemainingMoves: _gameLogic.iceBlockRemainingMoves,
+                    ),
+                    Positioned(
+                      left: boardSize * 3 / 4 - 14,
+                      top: -40,
+                      child: IconButton(
+                        icon: const Icon(Icons.undo, size: 28),
+                        color: GameColors.textColor,
+                        onPressed: _undoToInitial,
+                        tooltip: '撤销上一步',
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
