@@ -372,27 +372,31 @@ class Game2048Logic extends ChangeNotifier {
     List<Cell> workingRow = List.from(row);
 
     for (int i = 0; i < workingRow.length; i++) {
-      if (workingRow[i].isFrozenNumber && i + 1 < workingRow.length) {
-        final rightCell = workingRow[i + 1];
-        if (rightCell.isNumber &&
-            !rightCell.isFrozenNumber &&
-            workingRow[i].value == rightCell.value) {
-          int mergedValue = workingRow[i].value * 2;
-          int remainingMoves = workingRow[i].remainingMoves ?? 0;
-          remainingMoves = max(0, remainingMoves - 1);
-          if (remainingMoves > 0) {
-            workingRow[i] = Cell.frozenNumber(mergedValue, remainingMoves);
-          } else {
-            workingRow[i] = Cell.number(mergedValue);
-          }
-          workingRow[i + 1] = Cell.empty();
-          scoreAdded += mergedValue;
-          _iceBlockHadMerge = true;
+      if (workingRow[i].isFrozenNumber) {
+        for (int j = i + 1; j < workingRow.length; j++) {
+          if (workingRow[j].isWoodBlock) break;
+          if (workingRow[j].isFrozenNumber) break;
+          if (workingRow[j].isNumber &&
+              !workingRow[j].isFrozenNumber &&
+              workingRow[i].value == workingRow[j].value) {
+            int mergedValue = workingRow[i].value * 2;
+            int remainingMoves = workingRow[i].remainingMoves ?? 0;
+            remainingMoves = max(0, remainingMoves - 1);
+            if (remainingMoves > 0) {
+              workingRow[i] = Cell.frozenNumber(mergedValue, remainingMoves);
+            } else {
+              workingRow[i] = Cell.number(mergedValue);
+            }
+            workingRow[j] = Cell.empty();
+            scoreAdded += mergedValue;
+            _iceBlockHadMerge = true;
 
-          if (rowIdx >= 0) {
-            mergePositions.add((rowIdx, i));
-          } else {
-            mergePositions.add((i, colIdx));
+            if (rowIdx >= 0) {
+              mergePositions.add((rowIdx, i));
+            } else {
+              mergePositions.add((i, colIdx));
+            }
+            break;
           }
         }
       }
@@ -573,27 +577,31 @@ class Game2048Logic extends ChangeNotifier {
     int additionalScore = 0;
 
     for (int i = workingRow.length - 1; i >= 0; i--) {
-      if (workingRow[i].isFrozenNumber && i > 0) {
-        final leftCell = workingRow[i - 1];
-        if (leftCell.isNumber &&
-            !leftCell.isFrozenNumber &&
-            workingRow[i].value == leftCell.value) {
-          int mergedValue = workingRow[i].value * 2;
-          int remainingMoves = workingRow[i].remainingMoves ?? 0;
-          remainingMoves = max(0, remainingMoves - 1);
-          if (remainingMoves > 0) {
-            workingRow[i] = Cell.frozenNumber(mergedValue, remainingMoves);
-          } else {
-            workingRow[i] = Cell.number(mergedValue);
-          }
-          workingRow[i - 1] = Cell.empty();
-          additionalScore += mergedValue;
-          _iceBlockHadMerge = true;
+      if (workingRow[i].isFrozenNumber) {
+        for (int j = i - 1; j >= 0; j--) {
+          if (workingRow[j].isWoodBlock) break;
+          if (workingRow[j].isFrozenNumber) break;
+          if (workingRow[j].isNumber &&
+              !workingRow[j].isFrozenNumber &&
+              workingRow[i].value == workingRow[j].value) {
+            int mergedValue = workingRow[i].value * 2;
+            int remainingMoves = workingRow[i].remainingMoves ?? 0;
+            remainingMoves = max(0, remainingMoves - 1);
+            if (remainingMoves > 0) {
+              workingRow[i] = Cell.frozenNumber(mergedValue, remainingMoves);
+            } else {
+              workingRow[i] = Cell.number(mergedValue);
+            }
+            workingRow[j] = Cell.empty();
+            additionalScore += mergedValue;
+            _iceBlockHadMerge = true;
 
-          if (rowIdx >= 0) {
-            mergePositions.add((rowIdx, i));
-          } else {
-            mergePositions.add((i, colIdx));
+            if (rowIdx >= 0) {
+              mergePositions.add((rowIdx, i));
+            } else {
+              mergePositions.add((i, colIdx));
+            }
+            break;
           }
         }
       }
