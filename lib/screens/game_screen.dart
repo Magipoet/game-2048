@@ -144,7 +144,7 @@ class _GameScreenState extends State<GameScreen> {
   }
 
   void _undoToInitial() {
-    _gameLogic.undoToInitial();
+    _gameLogic.undo();
     setState(() {
       _showWinDialog = false;
       _showGameOverDialog = false;
@@ -511,6 +511,13 @@ class _GameScreenState extends State<GameScreen> {
                   color: GameColors.textColor,
                 ),
               ),
+              const SizedBox(width: 8),
+              IconButton(
+                icon: const Icon(Icons.undo, size: 22),
+                color: GameColors.textColor,
+                onPressed: _undoToInitial,
+                tooltip: '撤销上一步',
+              ),
               const Spacer(),
               IconButton(
                 icon: const Icon(Icons.help_outline, size: 24),
@@ -574,8 +581,6 @@ class _GameScreenState extends State<GameScreen> {
           ),
         ),
         const SizedBox(height: 8),
-        _buildUndoButton(),
-        const SizedBox(height: 8),
         SizedBox(
           height: boardSize + 32,
           child: Center(
@@ -613,6 +618,13 @@ class _GameScreenState extends State<GameScreen> {
                         color: GameColors.textColor,
                       ),
                     ),
+                    const SizedBox(width: 8),
+                    IconButton(
+                      icon: const Icon(Icons.undo, size: 28),
+                      color: GameColors.textColor,
+                      onPressed: _undoToInitial,
+                      tooltip: '撤销上一步',
+                    ),
                     const Spacer(),
                     IconButton(
                       icon: const Icon(Icons.help_outline, size: 28),
@@ -623,8 +635,6 @@ class _GameScreenState extends State<GameScreen> {
                   ],
                 ),
               ),
-              _buildUndoButton(),
-              const SizedBox(height: 8),
               Center(
                 child: BoardWidget(
                   board: _gameLogic.board,
@@ -701,21 +711,6 @@ class _GameScreenState extends State<GameScreen> {
           ),
         ),
       ),
-    );
-  }
-
-  Widget _buildUndoButton() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        IconButton(
-          icon: const Icon(Icons.undo),
-          color: GameColors.textColor,
-          onPressed: _undoToInitial,
-          tooltip: '撤销到初始状态',
-          iconSize: 28,
-        ),
-      ],
     );
   }
 }

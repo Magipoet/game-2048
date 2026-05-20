@@ -38,10 +38,7 @@ class Game2048Logic extends ChangeNotifier {
   int _woodBlockCooldown = 0;
   int _iceBlockCooldown = 0;
 
-  GameBoard? _initialBoard;
-  int _initialScore = 0;
-  (int, int)? _initialIceBlockPosition;
-  int _initialIceBlockRemainingMoves = 0;
+  final List<_GameSnapshot> _history = [];
 
   final Random _random = Random();
 
@@ -74,26 +71,21 @@ class Game2048Logic extends ChangeNotifier {
       _trySpawnIceBlock();
     }
 
-    _saveInitialState();
+    _history.clear();
   }
 
-  void _saveInitialState() {
-    _initialBoard = _board.clone();
-    _initialScore = _score;
-    _initialIceBlockPosition = _iceBlockPosition;
-    _initialIceBlockRemainingMoves = _iceBlockRemainingMoves;
-  }
+  bool get canUndo => _history.isNotEmpty;
 
-  void undoToInitial() {
-    if (_initialBoard == null) return;
-    _board = _initialBoard!.clone();
-    _score = _initialScore;
-    _iceBlockPosition = _initialIceBlockPosition;
-    _iceBlockRemainingMoves = _initialIceBlockRemainingMoves;
+  void undo() {
+    if (_history.isEmpty) return;
+    final snapshot = _history.removeLast();
+    _board = snapshot.board;
+    _score = snapshot.score;
+    _iceBlockPosition = snapshot.iceBlockPosition;
+    _iceBlockRemainingMoves = snapshot.iceBlockRemainingMoves;
     _gameOver = false;
     _gameWon = false;
     _continueAfterWin = false;
-    stopTimer();
     notifyListeners();
   }
 
@@ -188,6 +180,13 @@ class Game2048Logic extends ChangeNotifier {
     bool isValid = !originalBoard.equals(_board);
 
     if (isValid) {
+      _history.add(_GameSnapshot(
+        board: originalBoard,
+        score: _score,
+        iceBlockPosition: _iceBlockPosition,
+        iceBlockRemainingMoves: _iceBlockRemainingMoves,
+      ));
+
       startTimerIfNeeded();
       _score += scoreAdded;
 
@@ -804,4 +803,18 @@ class Game2048Logic extends ChangeNotifier {
     }
     return maxValue;
   }
+}
+
+class _GameSnapshot {
+  final GameBoard board;
+  final int score;
+  final (int, int)? iceBlockPosition;
+  final int iceBlockRemainingMoves;
+
+  _GameSnapshot({
+    required this.board,
+    required this.score,
+    required this.iceBlockPosition,
+    required this.iceBlockRemainingMoves,
+  });
 }
