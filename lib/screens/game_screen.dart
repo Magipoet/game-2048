@@ -374,16 +374,6 @@ class _GameScreenState extends State<GameScreen> {
                   ? _buildPortraitLayout(boardSize)
                   : _buildLandscapeLayout(boardSize),
             ),
-            Positioned(
-              top: 16,
-              right: 16,
-              child: IconButton(
-                icon: const Icon(Icons.help_outline, size: 28),
-                color: GameColors.textColor,
-                onPressed: _showHelp,
-                tooltip: '游戏帮助',
-              ),
-            ),
             if (_showHelpDialog) _buildHelpDialog(),
           ],
         );
@@ -395,14 +385,25 @@ class _GameScreenState extends State<GameScreen> {
     return Column(
       children: [
         Padding(
-          padding: const EdgeInsets.only(top: 4, bottom: 4),
-          child: Text(
-            '2048消消乐',
-            style: TextStyle(
-              fontSize: 22,
-              fontWeight: FontWeight.bold,
-              color: GameColors.textColor,
-            ),
+          padding: const EdgeInsets.only(top: 4, bottom: 4, left: 8, right: 8),
+          child: Row(
+            children: [
+              Text(
+                '2048消消乐',
+                style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                  color: GameColors.textColor,
+                ),
+              ),
+              const Spacer(),
+              IconButton(
+                icon: const Icon(Icons.help_outline, size: 24),
+                color: GameColors.textColor,
+                onPressed: _showHelp,
+                tooltip: '游戏帮助',
+              ),
+            ],
           ),
         ),
         Expanded(
@@ -485,13 +486,24 @@ class _GameScreenState extends State<GameScreen> {
             children: [
               Padding(
                 padding: const EdgeInsets.only(left: 8, bottom: 16),
-                child: Text(
-                  '2048消消乐',
-                  style: TextStyle(
-                    fontSize: 36,
-                    fontWeight: FontWeight.bold,
-                    color: GameColors.textColor,
-                  ),
+                child: Row(
+                  children: [
+                    Text(
+                      '2048消消乐',
+                      style: TextStyle(
+                        fontSize: 36,
+                        fontWeight: FontWeight.bold,
+                        color: GameColors.textColor,
+                      ),
+                    ),
+                    const Spacer(),
+                    IconButton(
+                      icon: const Icon(Icons.help_outline, size: 28),
+                      color: GameColors.textColor,
+                      onPressed: _showHelp,
+                      tooltip: '游戏帮助',
+                    ),
+                  ],
                 ),
               ),
               Center(
