@@ -63,30 +63,28 @@ class HighestScoresPanel extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                  color: GameColors.textColor,
+                ),
+              ),
+              if (additionalInfo != null)
                 Text(
-                  title,
+                  '最佳: $additionalInfo',
                   style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                    color: GameColors.textColor,
+                    fontSize: 12,
+                    color: GameColors.textColor.withOpacity(0.7),
                   ),
                 ),
-                if (additionalInfo != null)
-                  Text(
-                    '最佳: $additionalInfo',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: GameColors.textColor.withOpacity(0.7),
-                    ),
-                  ),
-              ],
-            ),
+            ],
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 16),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.end,
@@ -112,7 +110,7 @@ class HighestScoresPanel extends StatelessWidget {
             label,
             style: TextStyle(
               fontSize: 13,
-              color: GameColors.textColor.withOpacity(0.75),
+              color: GameColors.textColor.withOpacity(0.9),
             ),
           ),
         ),
