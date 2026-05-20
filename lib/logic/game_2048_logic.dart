@@ -38,6 +38,11 @@ class Game2048Logic extends ChangeNotifier {
   int _woodBlockCooldown = 0;
   int _iceBlockCooldown = 0;
 
+  GameBoard? _initialBoard;
+  int _initialScore = 0;
+  (int, int)? _initialIceBlockPosition;
+  int _initialIceBlockRemainingMoves = 0;
+
   final Random _random = Random();
 
   Game2048Logic()
@@ -68,6 +73,28 @@ class Game2048Logic extends ChangeNotifier {
       _trySpawnWoodBlock();
       _trySpawnIceBlock();
     }
+
+    _saveInitialState();
+  }
+
+  void _saveInitialState() {
+    _initialBoard = _board.clone();
+    _initialScore = _score;
+    _initialIceBlockPosition = _iceBlockPosition;
+    _initialIceBlockRemainingMoves = _iceBlockRemainingMoves;
+  }
+
+  void undoToInitial() {
+    if (_initialBoard == null) return;
+    _board = _initialBoard!.clone();
+    _score = _initialScore;
+    _iceBlockPosition = _initialIceBlockPosition;
+    _iceBlockRemainingMoves = _initialIceBlockRemainingMoves;
+    _gameOver = false;
+    _gameWon = false;
+    _continueAfterWin = false;
+    stopTimer();
+    notifyListeners();
   }
 
   void setMode(GameMode mode) {
