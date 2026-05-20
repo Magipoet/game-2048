@@ -29,7 +29,6 @@ class _GameScreenState extends State<GameScreen> {
   late InputCoordinator _inputCoordinator;
   final FocusNode _focusNode = FocusNode();
 
-  bool _showHelpDialog = false;
   bool _showWinDialog = false;
   bool _showGameOverDialog = false;
   bool _isInitialized = false;
@@ -140,15 +139,110 @@ class _GameScreenState extends State<GameScreen> {
   }
 
   void _showHelp() {
-    setState(() {
-      _showHelpDialog = true;
-    });
-  }
-
-  void _closeHelpDialog() {
-    setState(() {
-      _showHelpDialog = false;
-    });
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (context) => Dialog(
+        insetPadding: const EdgeInsets.symmetric(horizontal: 40, vertical: 24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 20, 8, 0),
+              child: Row(
+                children: [
+                  const Text(
+                    '游戏玩法说明',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const Spacer(),
+                  IconButton(
+                    icon: const Icon(Icons.close),
+                    onPressed: () => Navigator.of(context).pop(),
+                    tooltip: '关闭',
+                  ),
+                ],
+              ),
+            ),
+            const Divider(height: 1),
+            Flexible(
+              child: Scrollbar(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        '基本规则',
+                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                      ),
+                      const SizedBox(height: 8),
+                      const Text('• 使用方向键（↑↓←→）或滑动屏幕移动方块'),
+                      const Text('• 相同数字的方块碰撞时会合并为两者之和'),
+                      const Text('• 每次有效移动后，空白处会随机出现 2 或 4'),
+                      const Text('• 合并数字会获得分数（例如 2+2=4，获得 4 分）'),
+                      const SizedBox(height: 16),
+                      const Text(
+                        '时间模式',
+                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                      ),
+                      const SizedBox(height: 8),
+                      const Text('• 限时 10 分钟：在 10 分钟内尽可能获得高分'),
+                      const Text('• 不限时：无时间限制，但会记录游戏时间'),
+                      const SizedBox(height: 16),
+                      const Text(
+                        '游戏模式',
+                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                      ),
+                      const SizedBox(height: 8),
+                      const Text('• 常规模式：经典 2048 玩法'),
+                      const Text('• 趣味模式：加入木块和冰块特殊元素'),
+                      const SizedBox(height: 8),
+                      const Text(
+                        '  🪵 木块：',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      const Text('    - 随机生成，不会移动'),
+                      const Text('    - 周围发生 4 次合并后消失'),
+                      const Text('    - 显示剩余需要合并的次数'),
+                      const SizedBox(height: 4),
+                      const Text(
+                        '  ❄️ 冰块区域：',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      const Text('    - 棋盘上有蓝色边框标记的冻结区域'),
+                      const Text('    - 数字滑入该区域后被冻结，无法再移动'),
+                      const Text('    - 冻结的数字可以参与合并'),
+                      const Text('    - 冰块区域最多存在 4 次滑动后消失'),
+                      const Text('    - 右上角显示剩余滑动次数'),
+                      const SizedBox(height: 16),
+                      const Text(
+                        '游戏结束',
+                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                      ),
+                      const SizedBox(height: 8),
+                      const Text('• 棋盘被填满且无法合并任何方块时游戏结束'),
+                      const Text('• 限时模式中时间耗尽也会结束游戏'),
+                      const SizedBox(height: 16),
+                      const Text(
+                        '游戏目标',
+                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                      ),
+                      const SizedBox(height: 8),
+                      const Text('• 合成出 2048 即可获胜'),
+                      const Text('• 获胜后可继续游戏挑战更高分数'),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   void _closeGameOverDialog() {
@@ -374,7 +468,6 @@ class _GameScreenState extends State<GameScreen> {
                   ? _buildPortraitLayout(boardSize)
                   : _buildLandscapeLayout(boardSize),
             ),
-            if (_showHelpDialog) _buildHelpDialog(),
           ],
         );
       },
@@ -582,96 +675,6 @@ class _GameScreenState extends State<GameScreen> {
           ),
         ),
       ),
-    );
-  }
-
-  Widget _buildHelpDialog() {
-    return Stack(
-      children: [
-        ModalBarrier(
-          color: Colors.black.withOpacity(0.5),
-          dismissible: true,
-          onDismiss: _closeHelpDialog,
-        ),
-        Center(
-          child: SingleChildScrollView(
-            child: AlertDialog(
-              title: const Text('游戏玩法说明'),
-              content: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Text(
-                    '基本规则',
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                  ),
-                  const SizedBox(height: 8),
-                  const Text('• 使用方向键（↑↓←→）或滑动屏幕移动方块'),
-                  const Text('• 相同数字的方块碰撞时会合并为两者之和'),
-                  const Text('• 每次有效移动后，空白处会随机出现 2 或 4'),
-                  const Text('• 合并数字会获得分数（例如 2+2=4，获得 4 分）'),
-                  const SizedBox(height: 16),
-                  const Text(
-                    '时间模式',
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                  ),
-                  const SizedBox(height: 8),
-                  const Text('• 限时 10 分钟：在 10 分钟内尽可能获得高分'),
-                  const Text('• 不限时：无时间限制，但会记录游戏时间'),
-                  const SizedBox(height: 16),
-                  const Text(
-                    '游戏模式',
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                  ),
-                  const SizedBox(height: 8),
-                  const Text('• 常规模式：经典 2048 玩法'),
-                  const Text('• 趣味模式：加入木块和冰块特殊元素'),
-                  const SizedBox(height: 8),
-                  const Text(
-                    '  🪵 木块：',
-                    style: TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  const Text('    - 随机生成，不会移动'),
-                  const Text('    - 周围发生 4 次合并后消失'),
-                  const Text('    - 显示剩余需要合并的次数'),
-                  const SizedBox(height: 4),
-                  const Text(
-                    '  ❄️ 冰块区域：',
-                    style: TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  const Text('    - 棋盘上有蓝色边框标记的冻结区域'),
-                  const Text('    - 数字滑入该区域后被冻结，无法再移动'),
-                  const Text('    - 冻结的数字可以参与合并'),
-                  const Text('    - 冰块区域最多存在 4 次滑动后消失'),
-                  const Text('    - 右上角显示剩余滑动次数'),
-                  const SizedBox(height: 16),
-                  const Text(
-                    '游戏结束',
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                  ),
-                  const SizedBox(height: 8),
-                  const Text('• 棋盘被填满且无法合并任何方块时游戏结束'),
-                  const Text('• 限时模式中时间耗尽也会结束游戏'),
-                  const SizedBox(height: 16),
-                  const Text(
-                    '游戏目标',
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                  ),
-                  const SizedBox(height: 8),
-                  const Text('• 合成出 2048 即可获胜'),
-                  const Text('• 获胜后可继续游戏挑战更高分数'),
-                ],
-              ),
-              actions: [
-                TextButton(
-                  onPressed: _closeHelpDialog,
-                  child: const Text('知道了'),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ],
     );
   }
 }
