@@ -132,14 +132,29 @@ class HighestScoresPanel extends StatelessWidget {
         ],
         const Spacer(),
         SizedBox(
-          width: 110,
-          child: Text(
-            '分数: $score',
+          width: 130,
+          child: RichText(
             textAlign: TextAlign.right,
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: GameColors.textColor,
+            text: TextSpan(
+              children: [
+                TextSpan(
+                  text: '分数: ',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: GameColors.textColor,
+                  ),
+                ),
+                TextSpan(
+                  text: score.toString().padLeft(6, ' '),
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: GameColors.textColor,
+                    fontFamily: 'monospace',
+                  ),
+                ),
+              ],
             ),
           ),
         ),
