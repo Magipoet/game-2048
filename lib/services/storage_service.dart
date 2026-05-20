@@ -11,7 +11,9 @@ class StorageService {
       'unlimited_normal_highest_score';
   static const String _unlimitedFunHighestScoreKey =
       'unlimited_fun_highest_score';
-  static const String _unlimitedBestTimeKey = 'unlimited_best_time';
+  static const String _unlimitedNormalBestTimeKey =
+      'unlimited_normal_best_time';
+  static const String _unlimitedFunBestTimeKey = 'unlimited_fun_best_time';
   static const String _gameStateKey = 'game_state';
 
   final SharedPreferences _prefs;
@@ -27,6 +29,12 @@ class StorageService {
     return variant == GameVariant.fun
         ? _unlimitedFunHighestScoreKey
         : _unlimitedNormalHighestScoreKey;
+  }
+
+  String _bestTimeKey(GameVariant variant) {
+    return variant == GameVariant.fun
+        ? _unlimitedFunBestTimeKey
+        : _unlimitedNormalBestTimeKey;
   }
 
   int getHighestScore(GameMode mode, GameVariant variant) {
@@ -46,15 +54,16 @@ class StorageService {
     }
   }
 
-  int getBestTime() {
-    return _prefs.getInt(_unlimitedBestTimeKey) ?? 0;
+  int getBestTime(GameVariant variant) {
+    return _prefs.getInt(_bestTimeKey(variant)) ?? 0;
   }
 
-  Future<void> setBestTime(int timeInSeconds) async {
+  Future<void> setBestTime(GameVariant variant, int timeInSeconds) async {
     try {
-      int currentBest = getBestTime();
+      String key = _bestTimeKey(variant);
+      int currentBest = getBestTime(variant);
       if (currentBest == 0 || timeInSeconds < currentBest) {
-        await _prefs.setInt(_unlimitedBestTimeKey, timeInSeconds);
+        await _prefs.setInt(key, timeInSeconds);
       }
     } catch (e) {
       print('Error saving best time: $e');

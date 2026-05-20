@@ -109,7 +109,8 @@ class _GameScreenState extends State<GameScreen> {
     );
 
     if (_gameLogic.currentMode == GameMode.unlimited && _gameLogic.isGameWon) {
-      await _storageService.setBestTime(_gameLogic.elapsedSeconds);
+      await _storageService.setBestTime(
+          _gameLogic.currentVariant, _gameLogic.elapsedSeconds);
     }
   }
 
@@ -436,7 +437,10 @@ class _GameScreenState extends State<GameScreen> {
                       GameMode.unlimited, GameVariant.normal),
                   unlimitedFunHighestScore: _storageService.getHighestScore(
                       GameMode.unlimited, GameVariant.fun),
-                  bestTime: _storageService.getBestTime(),
+                  unlimitedNormalBestTime:
+                      _storageService.getBestTime(GameVariant.normal),
+                  unlimitedFunBestTime:
+                      _storageService.getBestTime(GameVariant.fun),
                 ),
                 const SizedBox(height: 12),
                 _buildNewGameButton(),
@@ -522,7 +526,10 @@ class _GameScreenState extends State<GameScreen> {
                       GameMode.unlimited, GameVariant.normal),
                   unlimitedFunHighestScore: _storageService.getHighestScore(
                       GameMode.unlimited, GameVariant.fun),
-                  bestTime: _storageService.getBestTime(),
+                  unlimitedNormalBestTime:
+                      _storageService.getBestTime(GameVariant.normal),
+                  unlimitedFunBestTime:
+                      _storageService.getBestTime(GameVariant.fun),
                 ),
                 const SizedBox(height: 24),
                 _buildNewGameButton(),

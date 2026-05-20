@@ -7,7 +7,8 @@ class HighestScoresPanel extends StatelessWidget {
   final int timedFunHighestScore;
   final int unlimitedNormalHighestScore;
   final int unlimitedFunHighestScore;
-  final int bestTime;
+  final int unlimitedNormalBestTime;
+  final int unlimitedFunBestTime;
 
   const HighestScoresPanel({
     super.key,
@@ -15,7 +16,8 @@ class HighestScoresPanel extends StatelessWidget {
     required this.timedFunHighestScore,
     required this.unlimitedNormalHighestScore,
     required this.unlimitedFunHighestScore,
-    required this.bestTime,
+    required this.unlimitedNormalBestTime,
+    required this.unlimitedFunBestTime,
   });
 
   @override
@@ -42,7 +44,8 @@ class HighestScoresPanel extends StatelessWidget {
           title: '不限时模式',
           normalScore: unlimitedNormalHighestScore,
           funScore: unlimitedFunHighestScore,
-          additionalInfo: bestTime > 0 ? _formatTime(bestTime) : null,
+          normalBestTime: unlimitedNormalBestTime,
+          funBestTime: unlimitedFunBestTime,
         ),
       ],
     );
@@ -52,7 +55,8 @@ class HighestScoresPanel extends StatelessWidget {
     required String title,
     required int normalScore,
     required int funScore,
-    String? additionalInfo,
+    int? normalBestTime,
+    int? funBestTime,
   }) {
     return Container(
       padding: const EdgeInsets.all(12),
@@ -63,35 +67,33 @@ class HighestScoresPanel extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                title,
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                  color: GameColors.textColor,
-                ),
+          SizedBox(
+            width: 80,
+            child: Text(
+              title,
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+                color: GameColors.textColor,
               ),
-              if (additionalInfo != null)
-                Text(
-                  '最佳: $additionalInfo',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: GameColors.textColor.withOpacity(0.7),
-                  ),
-                ),
-            ],
+            ),
           ),
-          const SizedBox(width: 16),
+          const SizedBox(width: 8),
           Expanded(
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                _buildVariantRow('常规模式', normalScore),
+                _buildVariantRow(
+                  label: '常规模式',
+                  score: normalScore,
+                  bestTime: normalBestTime,
+                ),
                 const SizedBox(height: 4),
-                _buildVariantRow('趣味模式', funScore),
+                _buildVariantRow(
+                  label: '趣味模式',
+                  score: funScore,
+                  bestTime: funBestTime,
+                ),
               ],
             ),
           ),
@@ -100,22 +102,37 @@ class HighestScoresPanel extends StatelessWidget {
     );
   }
 
-  Widget _buildVariantRow(String label, int score) {
+  Widget _buildVariantRow({
+    required String label,
+    required int score,
+    int? bestTime,
+  }) {
     return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Padding(
-          padding: const EdgeInsets.only(left: 8),
+        SizedBox(
+          width: 64,
           child: Text(
             label,
             style: TextStyle(
               fontSize: 13,
-              color: GameColors.textColor.withOpacity(0.9),
+              fontWeight: FontWeight.w700,
+              color: GameColors.textColor,
             ),
           ),
         ),
+        if (bestTime != null && bestTime > 0) ...[
+          const SizedBox(width: 8),
+          Text(
+            '最佳: ${_formatTime(bestTime)}',
+            style: TextStyle(
+              fontSize: 12,
+              color: GameColors.textColor.withOpacity(0.7),
+            ),
+          ),
+        ],
+        const Spacer(),
         Text(
-          '$score',
+          '分数: $score',
           style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.bold,
