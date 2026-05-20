@@ -60,40 +60,43 @@ class HighestScoresPanel extends StatelessWidget {
         color: GameColors.emptyTile.withOpacity(0.3),
         borderRadius: BorderRadius.circular(8),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                    color: GameColors.textColor,
+                  ),
+                ),
+                if (additionalInfo != null)
                   Text(
-                    title,
+                    '最佳: $additionalInfo',
                     style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                      color: GameColors.textColor,
+                      fontSize: 12,
+                      color: GameColors.textColor.withOpacity(0.7),
                     ),
                   ),
-                  if (additionalInfo != null)
-                    Text(
-                      '最佳: $additionalInfo',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: GameColors.textColor.withOpacity(0.7),
-                      ),
-                    ),
-                ],
-              ),
-            ],
+              ],
+            ),
           ),
-          const SizedBox(height: 8),
-          _buildVariantRow('常规模式', normalScore),
-          const SizedBox(height: 4),
-          _buildVariantRow('趣味模式', funScore),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                _buildVariantRow('常规模式', normalScore),
+                const SizedBox(height: 4),
+                _buildVariantRow('趣味模式', funScore),
+              ],
+            ),
+          ),
         ],
       ),
     );
