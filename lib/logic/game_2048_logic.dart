@@ -30,10 +30,13 @@ class Game2048Logic extends ChangeNotifier {
   static const int _timedModeDuration = 10 * 60;
   static const int _woodBlockRequiredMerges = 3;
   static const int _iceBlockMaxMoves = 8;
+  static const int _cooldownMoves = 5;
 
   (int, int)? _iceBlockPosition;
   int _iceBlockRemainingMoves = 0;
   bool _iceBlockHadMerge = false;
+  int _woodBlockCooldown = 0;
+  int _iceBlockCooldown = 0;
 
   final Random _random = Random();
 
@@ -56,6 +59,8 @@ class Game2048Logic extends ChangeNotifier {
     _iceBlockPosition = null;
     _iceBlockRemainingMoves = 0;
     _iceBlockHadMerge = false;
+    _woodBlockCooldown = 0;
+    _iceBlockCooldown = 0;
     _addRandomTile();
     _addRandomTile();
 
@@ -187,6 +192,7 @@ class Game2048Logic extends ChangeNotifier {
         final newRemaining = (woodCell.remainingMerges ?? 0) - mergeCount;
         if (newRemaining <= 0) {
           _board.setCell(woodBlockPos.$1, woodBlockPos.$2, Cell.empty());
+          _woodBlockCooldown = _cooldownMoves;
         } else {
           _board.setCell(
             woodBlockPos.$1,
@@ -202,6 +208,14 @@ class Game2048Logic extends ChangeNotifier {
       _iceBlockHadMerge = false;
       _decrementIceBlock();
     }
+
+    if (_woodBlockCooldown > 0) {
+      _woodBlockCooldown--;
+    }
+    if (_iceBlockCooldown > 0) {
+      _iceBlockCooldown--;
+    }
+
     _trySpawnWoodBlock();
     _trySpawnIceBlock();
   }
@@ -214,6 +228,7 @@ class Game2048Logic extends ChangeNotifier {
       _unfreezeAllNumbers();
       _iceBlockPosition = null;
       _iceBlockRemainingMoves = 0;
+      _iceBlockCooldown = _cooldownMoves;
     }
   }
 
@@ -230,6 +245,7 @@ class Game2048Logic extends ChangeNotifier {
 
   void _trySpawnWoodBlock() {
     if (_board.hasWoodBlock()) return;
+    if (_woodBlockCooldown > 0) return;
 
     final emptyCells = _board.getEmptyCells();
     if (emptyCells.isEmpty) return;
@@ -243,6 +259,7 @@ class Game2048Logic extends ChangeNotifier {
 
   void _trySpawnIceBlock() {
     if (_iceBlockPosition != null) return;
+    if (_iceBlockCooldown > 0) return;
     if (_random.nextDouble() >= 0.1) return;
 
     List<(int, int)> candidates = [];
