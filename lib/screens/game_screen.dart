@@ -104,6 +104,7 @@ class _GameScreenState extends State<GameScreen> {
 
     await _storageService.setHighestScore(
       _gameLogic.currentMode,
+      _gameLogic.currentVariant,
       _gameLogic.score,
     );
 
@@ -427,10 +428,14 @@ class _GameScreenState extends State<GameScreen> {
                 ),
                 const SizedBox(height: 12),
                 HighestScoresPanel(
-                  timedHighestScore:
-                      _storageService.getHighestScore(GameMode.timed),
-                  unlimitedHighestScore:
-                      _storageService.getHighestScore(GameMode.unlimited),
+                  timedNormalHighestScore: _storageService.getHighestScore(
+                      GameMode.timed, GameVariant.normal),
+                  timedFunHighestScore: _storageService.getHighestScore(
+                      GameMode.timed, GameVariant.fun),
+                  unlimitedNormalHighestScore: _storageService.getHighestScore(
+                      GameMode.unlimited, GameVariant.normal),
+                  unlimitedFunHighestScore: _storageService.getHighestScore(
+                      GameMode.unlimited, GameVariant.fun),
                   bestTime: _storageService.getBestTime(),
                 ),
                 const SizedBox(height: 12),
@@ -509,10 +514,14 @@ class _GameScreenState extends State<GameScreen> {
                 CurrentScorePanel(score: _gameLogic.score),
                 const SizedBox(height: 16),
                 HighestScoresPanel(
-                  timedHighestScore:
-                      _storageService.getHighestScore(GameMode.timed),
-                  unlimitedHighestScore:
-                      _storageService.getHighestScore(GameMode.unlimited),
+                  timedNormalHighestScore: _storageService.getHighestScore(
+                      GameMode.timed, GameVariant.normal),
+                  timedFunHighestScore: _storageService.getHighestScore(
+                      GameMode.timed, GameVariant.fun),
+                  unlimitedNormalHighestScore: _storageService.getHighestScore(
+                      GameMode.unlimited, GameVariant.normal),
+                  unlimitedFunHighestScore: _storageService.getHighestScore(
+                      GameMode.unlimited, GameVariant.fun),
                   bestTime: _storageService.getBestTime(),
                 ),
                 const SizedBox(height: 24),

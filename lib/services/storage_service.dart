@@ -5,8 +5,12 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/game_mode.dart';
 
 class StorageService {
-  static const String _timedHighestScoreKey = 'timed_highest_score';
-  static const String _unlimitedHighestScoreKey = 'unlimited_highest_score';
+  static const String _timedNormalHighestScoreKey = 'timed_normal_highest_score';
+  static const String _timedFunHighestScoreKey = 'timed_fun_highest_score';
+  static const String _unlimitedNormalHighestScoreKey =
+      'unlimited_normal_highest_score';
+  static const String _unlimitedFunHighestScoreKey =
+      'unlimited_fun_highest_score';
   static const String _unlimitedBestTimeKey = 'unlimited_best_time';
   static const String _gameStateKey = 'game_state';
 
@@ -14,19 +18,26 @@ class StorageService {
 
   StorageService(this._prefs);
 
-  int getHighestScore(GameMode mode) {
-    String key = mode == GameMode.timed 
-        ? _timedHighestScoreKey 
-        : _unlimitedHighestScoreKey;
-    return _prefs.getInt(key) ?? 0;
+  String _highestScoreKey(GameMode mode, GameVariant variant) {
+    if (mode == GameMode.timed) {
+      return variant == GameVariant.fun
+          ? _timedFunHighestScoreKey
+          : _timedNormalHighestScoreKey;
+    }
+    return variant == GameVariant.fun
+        ? _unlimitedFunHighestScoreKey
+        : _unlimitedNormalHighestScoreKey;
   }
 
-  Future<void> setHighestScore(GameMode mode, int score) async {
+  int getHighestScore(GameMode mode, GameVariant variant) {
+    return _prefs.getInt(_highestScoreKey(mode, variant)) ?? 0;
+  }
+
+  Future<void> setHighestScore(
+      GameMode mode, GameVariant variant, int score) async {
     try {
-      String key = mode == GameMode.timed 
-          ? _timedHighestScoreKey 
-          : _unlimitedHighestScoreKey;
-      int currentHighest = getHighestScore(mode);
+      String key = _highestScoreKey(mode, variant);
+      int currentHighest = getHighestScore(mode, variant);
       if (score > currentHighest) {
         await _prefs.setInt(key, score);
       }
