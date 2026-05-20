@@ -576,7 +576,7 @@ class _GameScreenState extends State<GameScreen> {
                   const Text('• 合并数字会获得分数（例如 2+2=4，获得 4 分）'),
                   const SizedBox(height: 16),
                   const Text(
-                    '游戏模式',
+                    '时间模式',
                     style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                   ),
                   const SizedBox(height: 8),
@@ -584,7 +584,7 @@ class _GameScreenState extends State<GameScreen> {
                   const Text('• 不限时：无时间限制，但会记录游戏时间'),
                   const SizedBox(height: 16),
                   const Text(
-                    '游戏变体',
+                    '游戏模式',
                     style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                   ),
                   const SizedBox(height: 8),

@@ -33,7 +33,7 @@ class ModeSelector extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          '游戏模式',
+          '时间模式',
           style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.bold,
@@ -67,7 +67,7 @@ class ModeSelector extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          '游戏变体',
+          '游戏模式',
           style: TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.bold,
