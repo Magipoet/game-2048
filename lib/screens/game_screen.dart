@@ -575,30 +575,36 @@ class _GameScreenState extends State<GameScreen> {
         ),
         const SizedBox(height: 8),
         SizedBox(
-          height: boardSize + 32,
+          height: boardSize + 56,
           child: Center(
-            child: Stack(
-              clipBehavior: Clip.none,
-              children: [
-                BoardWidget(
-                  board: _gameLogic.board,
-                  size: boardSize,
-                  iceBlockPosition: _gameLogic.iceBlockPosition,
-                  iceBlockRemainingMoves: _gameLogic.iceBlockRemainingMoves,
-                ),
-                Positioned(
-                  left: boardSize * 3 / 4 - 14,
-                  top: -36,
-                  child: IconButton(
-                    icon: const Icon(Icons.undo, size: 24),
-                    color: GameColors.textColor,
-                    onPressed: _undoToInitial,
-                    tooltip: '撤销上一步',
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(),
+            child: SizedBox(
+              width: boardSize,
+              height: boardSize + 56,
+              child: Stack(
+                children: [
+                  Positioned(
+                    top: 40,
+                    left: 0,
+                    right: 0,
+                    child: BoardWidget(
+                      board: _gameLogic.board,
+                      size: boardSize,
+                      iceBlockPosition: _gameLogic.iceBlockPosition,
+                      iceBlockRemainingMoves: _gameLogic.iceBlockRemainingMoves,
+                    ),
                   ),
-                ),
-              ],
+                  Positioned(
+                    left: boardSize * 3 / 4 - 14,
+                    top: 8,
+                    child: IconButton(
+                      icon: const Icon(Icons.undo, size: 24),
+                      color: GameColors.textColor,
+                      onPressed: _undoToInitial,
+                      tooltip: '撤销上一步',
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
@@ -639,28 +645,34 @@ class _GameScreenState extends State<GameScreen> {
                 ),
               ),
               Center(
-                child: Stack(
-                  clipBehavior: Clip.none,
-                  children: [
-                    BoardWidget(
-                      board: _gameLogic.board,
-                      size: boardSize,
-                      iceBlockPosition: _gameLogic.iceBlockPosition,
-                      iceBlockRemainingMoves: _gameLogic.iceBlockRemainingMoves,
-                    ),
-                    Positioned(
-                      left: boardSize * 3 / 4 - 14,
-                      top: -40,
-                      child: IconButton(
-                        icon: const Icon(Icons.undo, size: 28),
-                        color: GameColors.textColor,
-                        onPressed: _undoToInitial,
-                        tooltip: '撤销上一步',
-                        padding: EdgeInsets.zero,
-                        constraints: const BoxConstraints(),
+                child: SizedBox(
+                  width: boardSize,
+                  height: boardSize + 56,
+                  child: Stack(
+                    children: [
+                      Positioned(
+                        top: 40,
+                        left: 0,
+                        right: 0,
+                        child: BoardWidget(
+                          board: _gameLogic.board,
+                          size: boardSize,
+                          iceBlockPosition: _gameLogic.iceBlockPosition,
+                          iceBlockRemainingMoves: _gameLogic.iceBlockRemainingMoves,
+                        ),
                       ),
-                    ),
-                  ],
+                      Positioned(
+                        left: boardSize * 3 / 4 - 14,
+                        top: 8,
+                        child: IconButton(
+                          icon: const Icon(Icons.undo, size: 28),
+                          color: GameColors.textColor,
+                          onPressed: _undoToInitial,
+                          tooltip: '撤销上一步',
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ],
