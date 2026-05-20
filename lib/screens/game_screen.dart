@@ -81,6 +81,14 @@ class _GameScreenState extends State<GameScreen> {
     if (_gameLogic.shouldShowWinDialog && !_showWinDialog) {
       _showWinDialog = true;
       _gameLogic.pauseTimer();
+
+      if (_gameLogic.currentMode == GameMode.unlimited) {
+        _storageService.setBestTime(
+          _gameLogic.currentVariant,
+          _gameLogic.elapsedSeconds,
+        );
+      }
+
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _showWinGameDialog();
       });
