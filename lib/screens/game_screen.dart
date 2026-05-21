@@ -586,35 +586,49 @@ class _GameScreenState extends State<GameScreen> {
   }
 
   Widget _buildBoardWithUndo(double boardSize) {
-    return SizedBox(
-      width: boardSize,
-      height: boardSize,
-      child: Stack(
-        children: [
-          BoardWidget(
-            board: _gameLogic.board,
-            size: boardSize,
-            iceBlockPosition: _gameLogic.iceBlockPosition,
-            iceBlockRemainingMoves: _gameLogic.iceBlockRemainingMoves,
-          ),
-          Positioned(
-            top: 0,
-            right: -16,
-            child: SizedBox(
-              height: 32,
-              width: 32,
-              child: IconButton(
-                icon: const Icon(Icons.undo),
-                iconSize: 26,
-                color: GameColors.textColor,
-                onPressed: _undoToInitial,
-                tooltip: '撤销上一步',
-                padding: EdgeInsets.zero,
-                alignment: Alignment.center,
+    final double padding = 10;
+    final double spacing = 10;
+    final double tileSize = (boardSize - padding * 2 - spacing * 3) / 4;
+    final double col3Right = padding + tileSize * 3 + spacing * 2;
+    final double col4Left = padding + tileSize * 3 + spacing * 3;
+    final double buttonCenterX = (col3Right + col4Left) / 2;
+    final double buttonY = padding + tileSize / 2;
+
+    return OverflowBox(
+      maxWidth: boardSize + 48,
+      maxHeight: boardSize,
+      alignment: Alignment.centerLeft,
+      child: SizedBox(
+        width: boardSize,
+        height: boardSize,
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            BoardWidget(
+              board: _gameLogic.board,
+              size: boardSize,
+              iceBlockPosition: _gameLogic.iceBlockPosition,
+              iceBlockRemainingMoves: _gameLogic.iceBlockRemainingMoves,
+            ),
+            Positioned(
+              left: buttonCenterX - 16,
+              top: buttonY - 16,
+              child: SizedBox(
+                height: 32,
+                width: 32,
+                child: IconButton(
+                  icon: const Icon(Icons.undo),
+                  iconSize: 22,
+                  color: GameColors.textColor,
+                  onPressed: _undoToInitial,
+                  tooltip: '撤销上一步',
+                  padding: EdgeInsets.zero,
+                  alignment: Alignment.center,
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -642,20 +656,6 @@ class _GameScreenState extends State<GameScreen> {
                         color: GameColors.textColor,
                       ),
                     ),
-                    const SizedBox(width: 6),
-                    SizedBox(
-                      height: 40,
-                      width: 48,
-                      child: IconButton(
-                        icon: const Icon(Icons.undo),
-                        iconSize: 32,
-                        color: GameColors.textColor,
-                        onPressed: _undoToInitial,
-                        tooltip: '撤销上一步',
-                        padding: EdgeInsets.zero,
-                        alignment: Alignment.bottomCenter,
-                      ),
-                    ),
                     const Spacer(),
                     IconButton(
                       icon: const Icon(Icons.help_outline, size: 28),
@@ -667,12 +667,7 @@ class _GameScreenState extends State<GameScreen> {
                 ),
               ),
               Center(
-                child: BoardWidget(
-                  board: _gameLogic.board,
-                  size: boardSize,
-                  iceBlockPosition: _gameLogic.iceBlockPosition,
-                  iceBlockRemainingMoves: _gameLogic.iceBlockRemainingMoves,
-                ),
+                child: _buildBoardWithUndo(boardSize),
               ),
             ],
           ),
