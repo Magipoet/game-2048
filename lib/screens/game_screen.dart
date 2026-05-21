@@ -512,20 +512,6 @@ class _GameScreenState extends State<GameScreen> {
                   color: GameColors.textColor,
                 ),
               ),
-              const SizedBox(width: 4),
-              SizedBox(
-                height: 26,
-                width: 36,
-                child: IconButton(
-                  icon: const Icon(Icons.undo),
-                  iconSize: 22,
-                  color: GameColors.textColor,
-                  onPressed: _undoToInitial,
-                  tooltip: '撤销上一步',
-                  padding: EdgeInsets.zero,
-                  alignment: Alignment.bottomCenter,
-                ),
-              ),
               const Spacer(),
               IconButton(
                 icon: const Icon(Icons.help_outline, size: 24),
@@ -592,15 +578,44 @@ class _GameScreenState extends State<GameScreen> {
         SizedBox(
           height: boardSize + 32,
           child: Center(
-            child: BoardWidget(
-              board: _gameLogic.board,
-              size: boardSize,
-              iceBlockPosition: _gameLogic.iceBlockPosition,
-              iceBlockRemainingMoves: _gameLogic.iceBlockRemainingMoves,
-            ),
+            child: _buildBoardWithUndo(boardSize),
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildBoardWithUndo(double boardSize) {
+    return SizedBox(
+      width: boardSize,
+      height: boardSize,
+      child: Stack(
+        children: [
+          BoardWidget(
+            board: _gameLogic.board,
+            size: boardSize,
+            iceBlockPosition: _gameLogic.iceBlockPosition,
+            iceBlockRemainingMoves: _gameLogic.iceBlockRemainingMoves,
+          ),
+          Positioned(
+            top: 0,
+            right: -16,
+            child: SizedBox(
+              height: 32,
+              width: 32,
+              child: IconButton(
+                icon: const Icon(Icons.undo),
+                iconSize: 26,
+                color: GameColors.textColor,
+                onPressed: _undoToInitial,
+                tooltip: '撤销上一步',
+                padding: EdgeInsets.zero,
+                alignment: Alignment.center,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
