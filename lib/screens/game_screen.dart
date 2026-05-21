@@ -614,14 +614,27 @@ class _GameScreenState extends State<GameScreen> {
                       ),
                     ),
                     const SizedBox(width: 16),
-                    IconButton(
-                      icon: const Icon(Icons.undo),
-                      iconSize: 28,
-                      color: GameColors.textColor,
-                      onPressed: _undoToInitial,
-                      tooltip: '撤销上一步',
-                      padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints(),
+                    InkWell(
+                      onTap: _undoToInitial,
+                      borderRadius: BorderRadius.circular(8),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.undo, size: 24, color: GameColors.textColor),
+                            const SizedBox(width: 4),
+                            Text(
+                              '撤销',
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: GameColors.textColor,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
                     const Spacer(),
                     IconButton(
