@@ -502,6 +502,7 @@ class _GameScreenState extends State<GameScreen> {
         Padding(
           padding: const EdgeInsets.only(top: 4, bottom: 4, left: 8, right: 8),
           child: Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Text(
                 '2048消消乐',
@@ -509,6 +510,20 @@ class _GameScreenState extends State<GameScreen> {
                   fontSize: 22,
                   fontWeight: FontWeight.bold,
                   color: GameColors.textColor,
+                ),
+              ),
+              const SizedBox(width: 4),
+              SizedBox(
+                height: 26,
+                width: 36,
+                child: IconButton(
+                  icon: const Icon(Icons.undo),
+                  iconSize: 22,
+                  color: GameColors.textColor,
+                  onPressed: _undoToInitial,
+                  tooltip: '撤销上一步',
+                  padding: EdgeInsets.zero,
+                  alignment: Alignment.bottomCenter,
                 ),
               ),
               const Spacer(),
@@ -575,36 +590,13 @@ class _GameScreenState extends State<GameScreen> {
         ),
         const SizedBox(height: 8),
         SizedBox(
-          height: boardSize + 56,
+          height: boardSize + 32,
           child: Center(
-            child: SizedBox(
-              width: boardSize,
-              height: boardSize + 56,
-              child: Stack(
-                children: [
-                  Positioned(
-                    top: 40,
-                    left: 0,
-                    right: 0,
-                    child: BoardWidget(
-                      board: _gameLogic.board,
-                      size: boardSize,
-                      iceBlockPosition: _gameLogic.iceBlockPosition,
-                      iceBlockRemainingMoves: _gameLogic.iceBlockRemainingMoves,
-                    ),
-                  ),
-                  Positioned(
-                    left: boardSize * 3 / 4 - 14,
-                    top: 8,
-                    child: IconButton(
-                      icon: const Icon(Icons.undo, size: 24),
-                      color: GameColors.textColor,
-                      onPressed: _undoToInitial,
-                      tooltip: '撤销上一步',
-                    ),
-                  ),
-                ],
-              ),
+            child: BoardWidget(
+              board: _gameLogic.board,
+              size: boardSize,
+              iceBlockPosition: _gameLogic.iceBlockPosition,
+              iceBlockRemainingMoves: _gameLogic.iceBlockRemainingMoves,
             ),
           ),
         ),
@@ -625,6 +617,7 @@ class _GameScreenState extends State<GameScreen> {
               Padding(
                 padding: const EdgeInsets.only(left: 8, bottom: 16),
                 child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     Text(
                       '2048消消乐',
@@ -632,6 +625,20 @@ class _GameScreenState extends State<GameScreen> {
                         fontSize: 36,
                         fontWeight: FontWeight.bold,
                         color: GameColors.textColor,
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    SizedBox(
+                      height: 40,
+                      width: 48,
+                      child: IconButton(
+                        icon: const Icon(Icons.undo),
+                        iconSize: 32,
+                        color: GameColors.textColor,
+                        onPressed: _undoToInitial,
+                        tooltip: '撤销上一步',
+                        padding: EdgeInsets.zero,
+                        alignment: Alignment.bottomCenter,
                       ),
                     ),
                     const Spacer(),
@@ -645,34 +652,11 @@ class _GameScreenState extends State<GameScreen> {
                 ),
               ),
               Center(
-                child: SizedBox(
-                  width: boardSize,
-                  height: boardSize + 56,
-                  child: Stack(
-                    children: [
-                      Positioned(
-                        top: 40,
-                        left: 0,
-                        right: 0,
-                        child: BoardWidget(
-                          board: _gameLogic.board,
-                          size: boardSize,
-                          iceBlockPosition: _gameLogic.iceBlockPosition,
-                          iceBlockRemainingMoves: _gameLogic.iceBlockRemainingMoves,
-                        ),
-                      ),
-                      Positioned(
-                        left: boardSize * 3 / 4 - 14,
-                        top: 8,
-                        child: IconButton(
-                          icon: const Icon(Icons.undo, size: 28),
-                          color: GameColors.textColor,
-                          onPressed: _undoToInitial,
-                          tooltip: '撤销上一步',
-                        ),
-                      ),
-                    ],
-                  ),
+                child: BoardWidget(
+                  board: _gameLogic.board,
+                  size: boardSize,
+                  iceBlockPosition: _gameLogic.iceBlockPosition,
+                  iceBlockRemainingMoves: _gameLogic.iceBlockRemainingMoves,
                 ),
               ),
             ],
