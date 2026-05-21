@@ -578,7 +578,12 @@ class _GameScreenState extends State<GameScreen> {
         SizedBox(
           height: boardSize + 32,
           child: Center(
-            child: _buildBoardWithUndo(boardSize),
+            child: BoardWidget(
+              board: _gameLogic.board,
+              size: boardSize,
+              iceBlockPosition: _gameLogic.iceBlockPosition,
+              iceBlockRemainingMoves: _gameLogic.iceBlockRemainingMoves,
+            ),
           ),
         ),
       ],
@@ -594,41 +599,36 @@ class _GameScreenState extends State<GameScreen> {
     final double buttonCenterX = (col3Right + col4Left) / 2;
     final double buttonY = padding + tileSize / 2;
 
-    return OverflowBox(
-      maxWidth: boardSize + 48,
-      maxHeight: boardSize,
-      alignment: Alignment.centerLeft,
-      child: SizedBox(
-        width: boardSize,
-        height: boardSize,
-        child: Stack(
-          clipBehavior: Clip.none,
-          children: [
-            BoardWidget(
-              board: _gameLogic.board,
-              size: boardSize,
-              iceBlockPosition: _gameLogic.iceBlockPosition,
-              iceBlockRemainingMoves: _gameLogic.iceBlockRemainingMoves,
-            ),
-            Positioned(
-              left: buttonCenterX - 16,
-              top: buttonY - 16,
-              child: SizedBox(
-                height: 32,
-                width: 32,
-                child: IconButton(
-                  icon: const Icon(Icons.undo),
-                  iconSize: 22,
-                  color: GameColors.textColor,
-                  onPressed: _undoToInitial,
-                  tooltip: '撤销上一步',
-                  padding: EdgeInsets.zero,
-                  alignment: Alignment.center,
-                ),
+    return SizedBox(
+      width: boardSize,
+      height: boardSize,
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          BoardWidget(
+            board: _gameLogic.board,
+            size: boardSize,
+            iceBlockPosition: _gameLogic.iceBlockPosition,
+            iceBlockRemainingMoves: _gameLogic.iceBlockRemainingMoves,
+          ),
+          Positioned(
+            left: buttonCenterX - 16,
+            top: buttonY - 16,
+            child: SizedBox(
+              height: 32,
+              width: 32,
+              child: IconButton(
+                icon: const Icon(Icons.undo),
+                iconSize: 22,
+                color: GameColors.textColor,
+                onPressed: _undoToInitial,
+                tooltip: '撤销上一步',
+                padding: EdgeInsets.zero,
+                alignment: Alignment.center,
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
