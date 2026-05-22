@@ -1,6 +1,7 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../logic/game_2048_logic.dart';
 import '../models/game_mode.dart';
@@ -162,238 +163,298 @@ class _GameScreenState extends State<GameScreen> {
   void _showHelp() {
     final pageController = PageController();
     int currentPage = 0;
+    final scrollControllers = List.generate(3, (_) => ScrollController());
+
+    void handleKey(KeyEvent event) {
+      if (event is! KeyDownEvent) return;
+
+      switch (event.logicalKey) {
+        case LogicalKeyboardKey.arrowLeft:
+          if (currentPage > 0) {
+            pageController.previousPage(
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.easeInOut,
+            );
+          }
+        case LogicalKeyboardKey.arrowRight:
+          if (currentPage < 2) {
+            pageController.nextPage(
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.easeInOut,
+            );
+          }
+        case LogicalKeyboardKey.arrowUp:
+          final sc = scrollControllers[currentPage];
+          if (sc.hasClients) {
+            sc.animateTo(
+            max(0, sc.offset - 80),
+            duration: const Duration(milliseconds: 200),
+            curve: Curves.easeOut,
+          );
+          }
+        case LogicalKeyboardKey.arrowDown:
+          final sc = scrollControllers[currentPage];
+          if (sc.hasClients) {
+            final maxExtent = sc.position.maxScrollExtent;
+            sc.animateTo(
+            min(maxExtent, sc.offset + 80),
+            duration: const Duration(milliseconds: 200),
+            curve: Curves.easeOut,
+          );
+          }
+        case LogicalKeyboardKey.escape:
+          Navigator.of(context).pop();
+        default:
+          break;
+      }
+    }
+
     showDialog(
       context: context,
       barrierDismissible: true,
       builder: (context) => StatefulBuilder(
-        builder: (context, setDialogState) => Dialog(
-          insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 500),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 16, 8, 0),
-                  child: Row(
-                    children: [
-                      const Text(
-                        '游戏玩法说明',
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const Spacer(),
-                      IconButton(
-                        icon: const Icon(Icons.close),
-                        onPressed: () => Navigator.of(context).pop(),
-                        tooltip: '关闭',
-                      ),
-                    ],
-                  ),
-                ),
-                const Divider(height: 1),
-                Flexible(
-                  child: SizedBox(
-                    height: 400,
-                    child: PageView(
-                      controller: pageController,
-                      onPageChanged: (index) {
-                        setDialogState(() {
-                          currentPage = index;
-                        });
-                      },
+        builder: (context, setDialogState) => Focus(
+          autofocus: true,
+          onKeyEvent: (node, event) {
+            handleKey(event);
+            return KeyEventResult.handled;
+          },
+          child: Dialog(
+            insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 500),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 16, 8, 0),
+                    child: Row(
                       children: [
-                        SingleChildScrollView(
-                          padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text(
-                                '🎮 游戏基本玩法',
-                                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-                              ),
-                              const SizedBox(height: 12),
-                              const Text(
-                                '基本规则',
-                                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                              ),
-                              const SizedBox(height: 8),
-                              const Text('• 使用方向键（↑↓←→）或滑动屏幕移动方块'),
-                              const Text('• 相同数字的方块碰撞时会合并为两者之和'),
-                              const Text('• 每次有效移动后，空白处会随机出现 2 或 4'),
-                              const Text('• 合并数字会获得分数（例如 2+2=4，获得 4 分）'),
-                              const SizedBox(height: 16),
-                              const Text(
-                                '⏱️ 时间模式',
-                                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                              ),
-                              const SizedBox(height: 8),
-                              const Text('• 限时 10 分钟：在 10 分钟内尽可能获得高分'),
-                              const Text('• 不限时：无时间限制，但会记录游戏时间'),
-                              const SizedBox(height: 16),
-                              const Text(
-                                '🎯 游戏目标',
-                                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                              ),
-                              const SizedBox(height: 8),
-                              const Text('• 合成出 2048 即可获胜'),
-                              const Text('• 获胜后可继续游戏挑战更高分数'),
-                              const Text('• 棋盘被填满且无法合并任何方块时游戏结束'),
-                              const Text('• 限时模式中时间耗尽也会结束游戏'),
-                            ],
+                        const Text(
+                          '游戏玩法说明',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
                           ),
                         ),
-                        SingleChildScrollView(
-                          padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text(
-                                '🌟 趣味模式玩法',
-                                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-                              ),
-                              const SizedBox(height: 12),
-                              const Text(
-                                '模式介绍',
-                                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                              ),
-                              const SizedBox(height: 8),
-                              const Text('• 趣味模式在经典玩法基础上加入了特殊元素'),
-                              const Text('• 让游戏更具挑战性和趣味性'),
-                              const SizedBox(height: 16),
-                              const Text(
-                                '🪵 木块',
-                                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                              ),
-                              const SizedBox(height: 8),
-                              const Text('• 随机生成在棋盘上，不会被移动'),
-                              const Text('• 显示数字表示周围需要发生的合并次数'),
-                              const Text('• 当周围发生指定次数合并后，木块消失'),
-                              const Text('• 每次合并可使相邻的多个木块计数 -1'),
-                              const SizedBox(height: 16),
-                              const Text(
-                                '❄️ 冰块区域',
-                                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                              ),
-                              const SizedBox(height: 8),
-                              const Text('• 棋盘上有蓝色边框标记的冻结区域'),
-                              const Text('• 数字滑入该区域后被冻结，无法再移动'),
-                              const Text('• 冻结的数字可以参与合并'),
-                              const Text('• 冰块区域最多存在 4 次滑动后消失'),
-                              const Text('• 右上角显示剩余滑动次数'),
-                            ],
+                        const Spacer(),
+                        IconButton(
+                          icon: const Icon(Icons.close),
+                          onPressed: () => Navigator.of(context).pop(),
+                          tooltip: '关闭',
+                        ),
+                      ],
+                    ),
+                  ),
+                  const Divider(height: 1),
+                  Flexible(
+                    child: SizedBox(
+                      height: 400,
+                      child: PageView(
+                        controller: pageController,
+                        onPageChanged: (index) {
+                          setDialogState(() {
+                            currentPage = index;
+                          });
+                        },
+                        children: [
+                          SingleChildScrollView(
+                            controller: scrollControllers[0],
+                            padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  '🎮 游戏基本玩法',
+                                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                                ),
+                                const SizedBox(height: 12),
+                                const Text(
+                                  '基本规则',
+                                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                                ),
+                                const SizedBox(height: 8),
+                                const Text('• 使用方向键（↑↓←→）或滑动屏幕移动方块'),
+                                const Text('• 相同数字的方块碰撞时会合并为两者之和'),
+                                const Text('• 每次有效移动后，空白处会随机出现 2 或 4'),
+                                const Text('• 合并数字会获得分数（例如 2+2=4，获得 4 分）'),
+                                const SizedBox(height: 16),
+                                const Text(
+                                  '⏱️ 时间模式',
+                                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                                ),
+                                const SizedBox(height: 8),
+                                const Text('• 限时 10 分钟：在 10 分钟内尽可能获得高分'),
+                                const Text('• 不限时：无时间限制，但会记录游戏时间'),
+                                const SizedBox(height: 16),
+                                const Text(
+                                  '🎯 游戏目标',
+                                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                                ),
+                                const SizedBox(height: 8),
+                                const Text('• 合成出 2048 即可获胜'),
+                                const Text('• 获胜后可继续游戏挑战更高分数'),
+                                const Text('• 棋盘被填满且无法合并任何方块时游戏结束'),
+                                const Text('• 限时模式中时间耗尽也会结束游戏'),
+                              ],
+                            ),
+                          ),
+                          SingleChildScrollView(
+                            controller: scrollControllers[1],
+                            padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  '🌟 趣味模式玩法',
+                                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                                ),
+                                const SizedBox(height: 12),
+                                const Text(
+                                  '模式介绍',
+                                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                                ),
+                                const SizedBox(height: 8),
+                                const Text('• 趣味模式在经典玩法基础上加入了特殊元素'),
+                                const Text('• 让游戏更具挑战性和趣味性'),
+                                const SizedBox(height: 16),
+                                const Text(
+                                  '🪵 木块',
+                                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                                ),
+                                const SizedBox(height: 8),
+                                const Text('• 随机生成在棋盘上，不会被移动'),
+                                const Text('• 显示数字表示周围需要发生的合并次数'),
+                                const Text('• 当周围发生指定次数合并后，木块消失'),
+                                const Text('• 每次合并可使相邻的多个木块计数 -1'),
+                                const SizedBox(height: 16),
+                                const Text(
+                                  '❄️ 冰块区域',
+                                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                                ),
+                                const SizedBox(height: 8),
+                                const Text('• 棋盘上有蓝色边框标记的冻结区域'),
+                                const Text('• 数字滑入该区域后被冻结，无法再移动'),
+                                const Text('• 冻结的数字可以参与合并'),
+                                const Text('• 冰块区域最多存在 4 次滑动后消失'),
+                                const Text('• 右上角显示剩余滑动次数'),
+                              ],
+                            ),
+                          ),
+                          SingleChildScrollView(
+                            controller: scrollControllers[2],
+                            padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                const SizedBox(height: 60),
+                                const Text(
+                                  '🎉',
+                                  style: TextStyle(fontSize: 64),
+                                ),
+                                const SizedBox(height: 24),
+                                const Text(
+                                  '祝您游玩愉快！',
+                                  style: TextStyle(
+                                    fontSize: 22,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                const SizedBox(height: 16),
+                                const Text(
+                                  '愿每一次滑动都带来惊喜，',
+                                  style: TextStyle(fontSize: 16),
+                                ),
+                                const Text(
+                                  '每一次合并都创造奇迹！',
+                                  style: TextStyle(fontSize: 16),
+                                ),
+                                const SizedBox(height: 8),
+                                const Text(
+                                  '享受游戏，挑战自我，',
+                                  style: TextStyle(fontSize: 16),
+                                ),
+                                const Text(
+                                  '创造属于你的最高分！',
+                                  style: TextStyle(fontSize: 16),
+                                ),
+                                const SizedBox(height: 16),
+                                const Text(
+                                  '— 2048 消消乐',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: Colors.grey,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: ElevatedButton(
+                            onPressed: currentPage > 0
+                                ? () {
+                                    pageController.previousPage(
+                                      duration: const Duration(milliseconds: 300),
+                                      curve: Curves.easeInOut,
+                                    );
+                                  }
+                                : null,
+                            child: const Text('上一页'),
                           ),
                         ),
-                        SingleChildScrollView(
-                          padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            children: [
-                              const SizedBox(height: 60),
-                              const Text(
-                                '🎉',
-                                style: TextStyle(fontSize: 64),
+                        const SizedBox(width: 16),
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: List.generate(3, (index) {
+                            return Container(
+                              margin: const EdgeInsets.symmetric(horizontal: 3),
+                              width: currentPage == index ? 16 : 8,
+                              height: 8,
+                              decoration: BoxDecoration(
+                                color: currentPage == index
+                                    ? Colors.blue
+                                    : Colors.grey[300],
+                                borderRadius: BorderRadius.circular(4),
                               ),
-                              const SizedBox(height: 24),
-                              const Text(
-                                '祝您游玩愉快！',
-                                style: TextStyle(
-                                  fontSize: 22,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              const SizedBox(height: 16),
-                              const Text(
-                                '愿每一次滑动都带来惊喜，',
-                                style: TextStyle(fontSize: 16),
-                              ),
-                              const Text(
-                                '每一次合并都创造奇迹！',
-                                style: TextStyle(fontSize: 16),
-                              ),
-                              const SizedBox(height: 8),
-                              const Text(
-                                '享受游戏，挑战自我，',
-                                style: TextStyle(fontSize: 16),
-                              ),
-                              const Text(
-                                '创造属于你的最高分！',
-                                style: TextStyle(fontSize: 16),
-                              ),
-                              const SizedBox(height: 16),
-                              const Text(
-                                '— 2048 消消乐',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  color: Colors.grey,
-                                ),
-                              ),
-                            ],
+                            );
+                          }),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: ElevatedButton(
+                            onPressed: currentPage < 2
+                                ? () {
+                                    pageController.nextPage(
+                                      duration: const Duration(milliseconds: 300),
+                                      curve: Curves.easeInOut,
+                                    );
+                                  }
+                                : () => Navigator.of(context).pop(),
+                            child: Text(currentPage < 2 ? '下一页' : '开始游戏'),
                           ),
                         ),
                       ],
                     ),
                   ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: ElevatedButton(
-                          onPressed: currentPage > 0
-                              ? () {
-                                  pageController.previousPage(
-                                    duration: const Duration(milliseconds: 300),
-                                    curve: Curves.easeInOut,
-                                  );
-                                }
-                              : null,
-                          child: const Text('上一页'),
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: List.generate(3, (index) {
-                          return Container(
-                            margin: const EdgeInsets.symmetric(horizontal: 3),
-                            width: currentPage == index ? 16 : 8,
-                            height: 8,
-                            decoration: BoxDecoration(
-                              color: currentPage == index
-                                  ? Colors.blue
-                                  : Colors.grey[300],
-                              borderRadius: BorderRadius.circular(4),
-                            ),
-                          );
-                        }),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: ElevatedButton(
-                          onPressed: currentPage < 2
-                              ? () {
-                                  pageController.nextPage(
-                                    duration: const Duration(milliseconds: 300),
-                                    curve: Curves.easeInOut,
-                                  );
-                                }
-                              : () => Navigator.of(context).pop(),
-                          child: Text(currentPage < 2 ? '下一页' : '开始游戏'),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
       ),
-    );
+    ).then((_) {
+      for (final sc in scrollControllers) {
+        sc.dispose();
+      }
+    });
   }
 
   void _closeGameOverDialog() {
