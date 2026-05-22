@@ -31,6 +31,7 @@ class BoardWidget extends StatelessWidget {
       child: Stack(
         children: [
           GridView.builder(
+            padding: EdgeInsets.zero,
             physics: const NeverScrollableScrollPhysics(),
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 4,
